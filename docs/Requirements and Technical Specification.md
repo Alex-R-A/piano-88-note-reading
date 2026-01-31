@@ -540,7 +540,7 @@ function processAnswer(
 | Component | Technology | Version | Rationale |
 |-----------|------------|---------|-----------|
 | Runtime | Node.js | 22.x LTS | Required for build tooling, testing, dev server |
-| Framework | React | 18.x | Component-based UI, hooks, explicit requirement |
+| Framework | React | 18.x | Coupled with R3F for 3D; stable ecosystem with Zustand, RTL, Radix |
 | Language | TypeScript | 5.x | Type safety, better IDE support, catch errors early |
 | Build Tool | Vite | 5.x | Fast ESM dev server, optimized production builds |
 | 3D Rendering | React Three Fiber | 8.x | Declarative Three.js for React, proper 3D geometry |
@@ -553,6 +553,26 @@ function processAnswer(
 | Testing | Vitest | 1.x | Fast, Vite-native, Jest-compatible API |
 | Testing (React) | @testing-library/react | 14.x | Component testing best practices |
 | Testing (E2E) | Playwright | 1.x | End-to-end browser testing for full lesson flow |
+
+### Architecture Decision: React + R3F
+
+**Key insight: React and R3F are a package deal.** React Three Fiber (R3F) is React-specific. Choosing R3F for 3D means choosing React as the framework. This coupling is intentional and beneficial for this project:
+
+- R3F's declarative model simplifies state-driven 3D (key highlighting on click)
+- Zustand, RTL, and Radix UI all assume React
+- Mature ecosystem with documented integration patterns
+- "Boring, stable" combo reduces surprise factor
+
+**Alternative considered: Vanilla Three.js**
+
+Using plain Three.js instead of R3F would decouple the 3D from the framework choice, allowing any UI framework (Svelte, Vue, etc.). For this project's simple 3D needs (12 static keys, click handlers, color changes), the vanilla glue code would be bounded and predictable.
+
+This path was not chosen because:
+- R3F's declarative state→render binding reduces complexity for this use case
+- Bundle size is not a constraint (local network deployment)
+- Single-developer project benefits from ecosystem stability
+
+If framework flexibility becomes important later, extracting the 3D to vanilla Three.js is a viable refactor.
 
 ### Project Structure
 
@@ -1020,40 +1040,21 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
 
 ## Performance Considerations
 
-### Bundle Size Target: < 500KB Initial JS
-
-This is a hard constraint. VexFlow (~754KB minified) and Three.js/R3F (~500KB+ minified) exceed this individually. Meeting this target requires mandatory lazy-loading.
-
-### Mandatory Lazy-Loading Strategy
-
-The following MUST be dynamically imported, not included in the main bundle:
-
-| Module | Load Trigger | Rationale |
-|--------|--------------|-----------|
-| VexFlow | Lesson screen mount | ~754KB minified; Main screen doesn't need notation |
-| Three.js + R3F | Lesson screen mount | ~500KB+ minified; Main screen doesn't need 3D |
-| smplr + samples | Audio enabled + first playback | Samples are large; only load when user wants audio |
-
-**Implementation pattern:**
-```typescript
-// In LessonScreen.tsx
-const StaffDisplay = lazy(() => import('./StaffDisplay'));
-const PianoKeyboard3D = lazy(() => import('./PianoKeyboard3D'));
-
-// Wrap with Suspense and loading indicator
-<Suspense fallback={<LoadingSpinner />}>
-  <StaffDisplay noteId={currentNote} />
-  <PianoKeyboard3D onKeyClick={handleClick} />
-</Suspense>
-```
-
-**Main screen must load in < 500KB.** Verify with `npx vite-bundle-visualizer` before release.
-
-### Other Considerations
+Bundle size is not a constraint (app runs on local network).
 
 - **3D Rendering**: Single octave (12 keys) is trivial for any modern GPU
 - **VexFlow**: Renders once per note change, SVG output is lightweight at runtime
 - **State Updates**: Zustand is optimized, minimal re-renders
+- **Audio**: Samples lazy-loaded when audio is enabled
+
+### Optional: Lazy-Loading for Faster Initial Paint
+
+Not required, but if faster initial load is desired:
+
+```typescript
+const StaffDisplay = lazy(() => import('./StaffDisplay'));
+const PianoKeyboard3D = lazy(() => import('./PianoKeyboard3D'));
+```
 
 ---
 
