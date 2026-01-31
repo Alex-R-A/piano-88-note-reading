@@ -2,121 +2,368 @@
 
 ## Project Overview
 
-A browser-based React application that teaches users to read musical staff notation and map notes to their corresponding positions on a piano keyboard. The application presents notes on a musical staff and requires users to identify the correct key on a visual 3D piano keyboard.
+A browser-based React application that teaches users to read musical staff notation and map notes to their corresponding piano keys. The application presents notes on a musical staff and requires users to identify the correct key on a visual 3D piano keyboard.
+
+**Target User**: Beginner piano learners who need to build the mental connection between written notation and physical key positions.
+
+**Core Learning Goal**: User sees a note on the staff → User identifies which piano key that note corresponds to.
 
 ---
 
-## User Requirements
+## Terminology Reference
+
+For implementation consistency:
+
+| Term | Definition |
+|------|------------|
+| **Pitch Class** | The letter name of a note regardless of octave (C, D, E, F, G, A, B) |
+| **Accidental** | Sharp (#) or flat (b) modifier on a note |
+| **Enharmonic** | Two note names for the same key (F# and Gb are enharmonic equivalents) |
+| **Octave** | A range of 12 semitones; on piano, octaves are numbered 0-8 |
+| **Middle C** | C4, the C nearest the center of an 88-key piano |
+| **Treble Clef** | G clef, used for higher-pitched notes (typically C4 and above) |
+| **Bass Clef** | F clef, used for lower-pitched notes (typically below C4) |
+| **Leger Lines** | Short horizontal lines above or below the staff for notes outside the 5 main lines |
+| **Staff** | The 5 horizontal lines on which notes are placed |
+| **NoteId** | String identifier format: letter + accidental + octave, e.g., "C#4", "Bb3", "G5" |
+
+---
+
+## Piano Layout Reference
+
+### 88-Key Piano Structure
+
+```
+Octave 0 (partial):  A0, Bb0, B0                    [3 notes]
+Octave 1 (full):     C1, C#1, D1... through B1      [12 notes]
+Octave 2 (full):     C2, C#2, D2... through B2      [12 notes]
+Octave 3 (full):     C3, C#3, D3... through B3      [12 notes]
+Octave 4 (full):     C4 (middle C), C#4... through B4  [12 notes]
+Octave 5 (full):     C5, C#5, D5... through B5      [12 notes]
+Octave 6 (full):     C6, C#6, D6... through B6      [12 notes]
+Octave 7 (full):     C7, C#7, D7... through B7      [12 notes]
+Octave 8 (partial):  C8                             [1 note]
+
+Total: 88 keys (52 white, 36 black)
+```
+
+### Notes Per Octave (Full Octave)
+
+Natural notes (white keys): C, D, E, F, G, A, B (7 notes)
+Accidentals (black keys): C#/Db, D#/Eb, F#/Gb, G#/Ab, A#/Bb (5 notes)
+
+When sharps/flats enabled, each black key generates TWO note items (sharp and flat spelling).
+
+### White Key Shapes
+
+White keys have notches where black keys sit between them:
+
+```
+Key C: notch on RIGHT only (black key C#/Db to its right)
+Key D: notches on BOTH sides (between C#/Db and D#/Eb)
+Key E: notch on LEFT only (black key D#/Eb to its left)
+Key F: notch on RIGHT only (black key F#/Gb to its right)
+Key G: notches on BOTH sides (between F#/Gb and G#/Ab)
+Key A: notches on BOTH sides (between G#/Ab and A#/Bb)
+Key B: notch on LEFT only (black key A#/Bb to its left)
+```
+
+This creates 3 distinct white key profiles:
+- **Type 1** (C, F): Rectangle with notch cut from top-right
+- **Type 2** (D, G, A): Rectangle with notches cut from both top corners
+- **Type 3** (E, B): Rectangle with notch cut from top-left
+
+Black keys are uniform raised rectangles.
+
+---
+
+## Screen Specifications
 
 ### Screen Flow
 
 ```
-Main Screen (Octave Selection) → Lesson Screen (Quiz) → Analytics Screen (Results)
+┌──────────────┐      ┌───────────────┐      ┌──────────────────┐
+│ Main Screen  │ ──→  │ Lesson Screen │ ──→  │ Analytics Screen │
+│ (Settings)   │      │ (Quiz)        │      │ (Results)        │
+└──────────────┘      └───────────────┘      └──────────────────┘
+                              │                        │
+                              └────────────────────────┘
+                                    (back to main)
 ```
+
+---
 
 ### Main Screen
 
-**Visual Elements:**
+#### Purpose
+Configure lesson parameters: which octaves to practice, whether to include accidentals, audio settings.
 
-1. **88-Key Piano Visualization**
-   - Full piano keyboard displayed horizontally
-   - White keys and black keys rendered
-   - Octaves visually grouped with surrounding boxes
-   - Each octave group has a checkbox below it for selection
+#### Visual Layout
 
-2. **Octave Selection**
-   - Checkboxes below each octave box
-   - First octave checked by default on app launch
-   - Multiple octaves can be selected simultaneously
-   - User builds custom practice set by selecting desired octaves
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐       │
+│  │ Oct │ Oct │ Oct │ Oct │ Oct │ Oct │ Oct │ Oct │ Oct │       │
+│  │  0  │  1  │  2  │  3  │  4  │  5  │  6  │  7  │  8  │       │
+│  │(A-B)│(C-B)│(C-B)│(C-B)│(C-B)│(C-B)│(C-B)│(C-B)│(C) │       │
+│  └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘       │
+│    [ ]   [ ]   [ ]   [ ]   [✓]   [ ]   [ ]   [ ]   [ ]         │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────┐       │
+│  │ Settings                                            │       │
+│  │                                                     │       │
+│  │  Include Sharps & Flats    [OFF]                   │       │
+│  │  Enable Audio              [ON]                    │       │
+│  │  Show Correct Answer       [OFF]                   │       │
+│  └─────────────────────────────────────────────────────┘       │
+│                                                                 │
+│                    [ Start Lesson ]                             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-3. **Toggle Options**
-   - **Sharps/Flats Toggle**: On/Off, controls whether accidentals are included in lesson
-   - **Audio Toggle**: On/Off, controls whether piano sounds play during lesson
-   - **Show Correct Answer Toggle**: On/Off (default Off), controls whether correct key is revealed after wrong answer
+#### Components
 
-4. **Start Button**
-   - Initiates lesson with selected configuration
-   - Disabled state when zero octaves are selected
-   - Enabled when at least one octave is checked
+**1. Piano Visualization (Top Section)**
+
+- Display all 88 keys horizontally
+- Keys rendered as simplified 2D rectangles (not 3D here, just overview)
+- White keys: white/light fill with dark border
+- Black keys: black/dark fill, narrower, positioned between appropriate white keys
+- Group keys into octave boxes with visible borders
+- Each octave box contains its keys and is labeled (Octave 0, Octave 1, etc.)
+- Partial octaves (0 and 8) still get their own boxes
+
+**2. Octave Checkboxes**
+
+- One checkbox centered below each octave box
+- Checkbox state: checked = octave included in lesson
+- **Default state on app load**: Only Octave 4 is checked (middle C octave, best starting point for beginners)
+- Multiple octaves can be checked simultaneously
+- Minimum one octave must be checked to enable Start button
+
+**3. Settings Panel**
+
+Three toggle switches (use switch UI component, not checkboxes, for visual distinction):
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Include Sharps & Flats | OFF | When OFF: only natural notes (white keys). When ON: include all enharmonic spellings of black keys |
+| Enable Audio | ON | When ON: play piano sound on answer. When OFF: silent |
+| Show Correct Answer | OFF | When ON: highlight correct key after wrong answer. When OFF: just show red flash |
+
+**4. Start Lesson Button**
+
+- Prominent button below settings
+- **Disabled state**: When zero octaves are checked
+  - Visual: grayed out, reduced opacity, no hover effect, cursor: not-allowed
+- **Enabled state**: When at least one octave is checked
+  - Visual: primary color (suggest blue #3b82f6), hover effect, cursor: pointer
+- Click action: Navigate to Lesson Screen, initialize lesson with current settings
+
+#### Responsive Behavior
+
+- Piano visualization should scale horizontally to fit viewport
+- Minimum viewport width: 768px (tablet and up for MVP)
+- Below minimum: show message suggesting larger screen
+
+---
 
 ### Lesson Screen
 
-**Visual Layout:**
+#### Purpose
+The core learning experience. Display a note, user identifies the key.
+
+#### Visual Layout
 
 ```
-┌─────────────────────────────────────┐
-│                                     │
-│         STAFF WITH NOTE             │
-│         (large, top area)           │
-│                                     │
-├─────────────────────────────────────┤
-│                                     │
-│         3D PIANO KEYBOARD           │
-│         (single octave, large)      │
-│         (angled player perspective) │
-│                                     │
-├─────────────────────────────────────┤
-│         [Stop Lesson Button]        │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                    ┌─────────────────────┐                      │
+│                    │     𝄞   ●          │   ← Staff with       │
+│                    │   ════════════     │     clef (50% opacity)│
+│                    │   ════════════     │     and note          │
+│                    │   ════════════     │                       │
+│                    │   ════════════     │                       │
+│                    │   ════════════     │                       │
+│                    └─────────────────────┘                      │
+│                                                                 │
+│            ┌─────────────────────────────────┐                  │
+│           ╱│ │░│ │░│ │ │░│ │░│ │░│ │        │  ← 3D keyboard   │
+│          ╱ │ │░│ │░│ │ │░│ │░│ │░│ │        │    at angle      │
+│         ╱  │ │ │ │ │ │ │ │ │ │ │ │ │        │                  │
+│        ╱   │ C │ D │ E │ F │ G │ A │ B │    │                  │
+│            └─────────────────────────────────┘                  │
+│                                                                 │
+│                      [ Stop Lesson ]                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Staff Display (Top Area):**
+#### Components
 
-- Five staff lines rendered large
-- Clef displayed at 50% opacity (treble or bass depending on note range)
-- Single note displayed prominently
-- Accidentals (# or ♭) shown directly next to note head when applicable (no key signatures)
-- Leger lines rendered for notes outside the five main lines
+**1. Staff Display (Top Area)**
 
-**3D Piano Keyboard (Bottom Area):**
+Rendered using VexFlow library.
 
-- Single octave displayed (7 white keys, 5 black keys)
-- Rendered in 3D at player viewing angle (looking down at keys as if seated at piano)
-- White keys with proper notched profiles where black keys sit
-- Black keys raised above white keys
-- All keys clickable
-- Black keys always visible regardless of sharps/flats toggle setting
+Specifications:
+- **Staff lines**: 5 horizontal lines, rendered large and clear
+- **Clef**: Treble or bass clef displayed at 50% opacity (de-emphasized but provides context)
+  - Clef selection rule: Note in octave 4 or higher → treble clef. Note in octave 3 or lower → bass clef.
+- **Note**: Single whole note rendered at 100% opacity, large and prominent
+- **Accidentals**: When note has sharp or flat, render the symbol directly to the left of the note head (standard notation convention)
+- **Leger lines**: Automatically rendered by VexFlow for notes above/below the staff
 
-**Interaction Flow:**
+VexFlow integration notes:
+- Create a Stave with appropriate clef
+- Create a StaveNote with the pitch
+- Add Accidental modifier if sharp/flat
+- Render to SVG in a container div
+- Apply CSS to set clef opacity to 50%
 
-1. Note appears on staff
-2. User clicks key on 3D keyboard
-3. Background flashes feedback color:
-   - Green: Correct answer
-   - Red: Wrong answer
-4. Flash duration: approximately 1 second
-5. If wrong and "Show Correct Answer" is enabled, correct key is highlighted
-6. Next note appears automatically after feedback
+**2. 3D Piano Keyboard (Middle Area)**
 
-**Stop Lesson Button:**
-- Visible during lesson
-- Clicking exits lesson and navigates to Analytics Screen
+Rendered using React Three Fiber (R3F).
+
+Specifications:
+- **Keys displayed**: Single octave only (7 white keys, 5 black keys)
+- **Key labels**: Optional subtle labels on white keys (C, D, E, F, G, A, B) for orientation
+- **3D perspective**: Camera positioned above and angled down at approximately 30-40 degrees from horizontal, simulating a player seated at piano looking at keys
+- **White keys**: Proper notched profiles (see White Key Shapes section), light colored (white or off-white)
+- **Black keys**: Raised above white keys by ~40% of their length, dark colored (black or near-black)
+- **Hover state**: Subtle highlight on key under cursor (slight brightness increase)
+- **Click detection**: R3F raycasting handles click events on 3D objects
+- **Black keys always visible**: Regardless of sharps/flats toggle (user can make mistakes by clicking them)
+
+Camera setup (R3F/Three.js):
+```javascript
+// Approximate values - tune during implementation
+camera.position.set(0, 5, 8);  // Above and in front
+camera.lookAt(0, 0, 0);        // Looking at keyboard center
+camera.fov = 50;               // Field of view
+```
+
+**3. Stop Lesson Button**
+
+- Positioned below the keyboard
+- Click action: End lesson immediately, navigate to Analytics Screen
+- Style: Secondary/outline style to distinguish from primary actions
+
+#### Critical Interaction Model
+
+**THE USER CLICKS PITCH CLASS, NOT SPECIFIC OCTAVE KEY.**
+
+The displayed keyboard shows a generic single octave. The note on the staff indicates both pitch class AND octave (via staff position). However, the user's task is to identify the correct **pitch class** (which key to press).
+
+Example:
+- Staff shows C#5 (C# in octave 5, on treble clef)
+- Keyboard shows one generic octave
+- User clicks the C# (black key between C and D)
+- This is CORRECT - user identified the pitch class correctly
+
+The octave information on the staff is for learning to READ which octave a note is in, but the keyboard interaction only validates pitch class. This simplifies the UI (single octave display) while still teaching octave reading through the staff.
+
+**Answer validation logic:**
+```typescript
+function isCorrectAnswer(displayedNote: NoteId, clickedKey: PitchClass): boolean {
+  const displayedPitchClass = extractPitchClass(displayedNote); // "C#5" → "C#"
+  return displayedPitchClass === clickedKey;
+}
+```
+
+For enharmonic equivalents: If "Gb4" is displayed and user clicks the black key between F and G, it's correct (that key is both F# and Gb).
+
+#### Feedback System
+
+**On user click:**
+
+1. Determine if answer is correct
+2. Display feedback:
+
+**Correct Answer:**
+- Background flashes GREEN (#22c55e)
+- If audio enabled: play the note sound
+- Flash duration: 800ms
+- Transition: fade out over 200ms
+
+**Wrong Answer:**
+- Background flashes RED (#ef4444)
+- If audio enabled: play the clicked note sound (so user hears their mistake)
+- Flash duration: 800ms
+- Transition: fade out over 200ms
+- If "Show Correct Answer" is ON:
+  - After red flash, highlight the correct key with a BLUE (#3b82f6) glow/outline for 1000ms
+  - Optionally play the correct note after a 300ms delay
+
+3. After feedback completes, automatically advance to next note
+
+**Feedback implementation:**
+- Use CSS transition on a full-screen overlay div
+- Overlay sits behind the content with pointer-events: none
+- Animate background-color and opacity
+
+---
 
 ### Analytics Screen
 
-**Visual Layout:**
+#### Purpose
+Show session performance summary so user can identify weak areas.
+
+#### Visual Layout
 
 ```
-┌─────────────────────────────────────┐
-│         Overall Accuracy: 88%       │
-├─────────────────────────────────────┤
-│  Note  │  Shown  │  Correct  │  %   │
-├────────┼─────────┼───────────┼──────┤
-│  F#4   │    8    │     3     │ 37%  │
-│  Bb3   │    6    │     3     │ 50%  │
-│  G4    │   12    │     9     │ 75%  │
-│  ...   │   ...   │    ...    │ ...  │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                     Session Complete!                           │
+│                                                                 │
+│                  Overall Accuracy: 78%                          │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Note    │  Times Shown  │  Correct  │  Accuracy       │   │
+│  ├──────────┼───────────────┼───────────┼─────────────────┤   │
+│  │  F#4     │      8        │     2     │  25%  ████░░░░  │   │
+│  │  Bb3     │      6        │     2     │  33%  █████░░░  │   │
+│  │  D5      │     12        │     6     │  50%  ███████░  │   │
+│  │  G4      │     10        │     8     │  80%  █████████ │   │
+│  │  C4      │     14        │    13     │  93%  ██████████│   │
+│  └──────────┴───────────────┴───────────┴─────────────────┘   │
+│                                                                 │
+│                    [ Back to Main Menu ]                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Content:**
+#### Components
 
-- Overall accuracy percentage displayed prominently at top
-- Table with one row per note
-- Columns: Note name, times shown, times correct, accuracy percentage
-- Sorted by accuracy ascending (most missed notes at top)
-- Navigation back to main screen
+**1. Header**
+- "Session Complete!" title
+- Overall accuracy percentage in large font (48px+)
+- Calculate: (total correct / total shown) * 100, rounded to nearest integer
+
+**2. Statistics Table**
+
+Columns:
+| Column | Description |
+|--------|-------------|
+| Note | NoteId string (e.g., "F#4", "Bb3", "C5") |
+| Times Shown | How many times this note was displayed |
+| Correct | How many times user answered correctly |
+| Accuracy | Percentage with visual bar indicator |
+
+Table behavior:
+- **Sort order**: Ascending by accuracy (worst performing notes at top)
+- **Row coloring** based on accuracy:
+  - 0-40%: Red background tint (#fee2e2)
+  - 41-70%: Yellow background tint (#fef9c3)
+  - 71-100%: Green background tint (#dcfce7)
+- **Visual accuracy bar**: Small horizontal bar next to percentage showing filled proportion
+- Only show notes that were actually shown during the session (don't list notes with 0 appearances)
+
+**3. Back Button**
+- "Back to Main Menu" button
+- Click action: Navigate to Main Screen
+- Resets all lesson state (fresh start)
 
 ---
 
@@ -126,58 +373,163 @@ Main Screen (Octave Selection) → Lesson Screen (Quiz) → Analytics Screen (Re
 
 When lesson starts:
 
-1. Collect all notes within selected octaves
-2. If sharps/flats toggle is OFF: include only natural notes (A, B, C, D, E, F, G per octave)
-3. If sharps/flats toggle is ON: include all enharmonic spellings as separate items
-   - F# and Gb are two distinct items in the set
-   - User must learn both spellings map to same physical key
-   - Black keys may appear multiple times with different notations
+```typescript
+function generateNoteSet(
+  selectedOctaves: number[],
+  includeSharpsFlats: boolean
+): NoteId[] {
+  const notes: NoteId[] = [];
+
+  for (const octave of selectedOctaves) {
+    // Add natural notes
+    const naturals = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+    // Handle partial octaves
+    if (octave === 0) {
+      // Octave 0 only has A, Bb, B
+      notes.push('A0', 'B0');
+      if (includeSharpsFlats) {
+        notes.push('Bb0');  // Only flat between A and B
+      }
+    } else if (octave === 8) {
+      // Octave 8 only has C
+      notes.push('C8');
+    } else {
+      // Full octave
+      for (const natural of naturals) {
+        notes.push(`${natural}${octave}`);
+      }
+
+      if (includeSharpsFlats) {
+        // Add BOTH sharp and flat spellings for each black key
+        notes.push(`C#${octave}`, `Db${octave}`);  // Same key
+        notes.push(`D#${octave}`, `Eb${octave}`);  // Same key
+        notes.push(`F#${octave}`, `Gb${octave}`);  // Same key
+        notes.push(`G#${octave}`, `Ab${octave}`);  // Same key
+        notes.push(`A#${octave}`, `Bb${octave}`);  // Same key
+      }
+    }
+  }
+
+  return notes;
+}
+```
+
+**Note count examples:**
+- 1 octave, no sharps/flats: 7 notes
+- 1 octave, with sharps/flats: 7 + 10 = 17 notes (each black key = 2 spellings)
+- 3 octaves, no sharps/flats: 21 notes
+- 3 octaves, with sharps/flats: 51 notes
 
 ### Spaced Repetition with Anti-Clustering
 
-**Core Algorithm:**
+#### State Structure
 
-```
-State:
-  - remainingSet: notes not yet shown in current cycle
-  - wrongNotes: map of note → weight (higher = show more often)
-  - recentBuffer: last N notes shown (N = 4)
-  - sessionStats: map of note → {shown: number, correct: number}
+```typescript
+interface LessonAlgorithmState {
+  // Immutable for session
+  fullNoteSet: NoteId[];           // All notes in this lesson
 
-On each turn:
-  1. Build candidate pool:
-     - All notes in remainingSet
-     - Weighted entries from wrongNotes (notes with higher weights appear multiple times conceptually)
+  // Mutable state
+  remainingNotes: Set<NoteId>;     // Notes not yet shown this cycle
+  errorWeights: Map<NoteId, number>; // note → error count (higher = show more)
+  recentBuffer: NoteId[];          // Last N notes shown (FIFO, max length = BUFFER_SIZE)
+  currentNote: NoteId | null;      // Currently displayed note
 
-  2. Filter candidates:
-     - Remove any note that appears in recentBuffer
+  // Statistics
+  stats: Map<NoteId, { shown: number; correct: number }>;
+}
 
-  3. Select next note:
-     - Random selection from filtered candidates
-     - Weight influences probability for wrong notes
-
-  4. Update state:
-     - Remove selected note from remainingSet (if present)
-     - Add selected note to recentBuffer (maintain size N, drop oldest)
-     - If remainingSet is empty, refill from full note set (start new cycle)
-
-  5. On user answer:
-     - Update sessionStats
-     - If wrong: increment weight in wrongNotes
+const BUFFER_SIZE = 4;  // Minimum gap before note can repeat
 ```
 
-**Anti-Clustering Rules:**
+#### Algorithm: Select Next Note
 
-1. **Minimum Gap**: At least 4 notes must be shown between any repetition of the same note
-2. **Cross-Cycle Persistence**: The recentBuffer persists when remainingSet is refilled
-   - Prevents: last note of cycle N being same as first note of cycle N+1
-3. **Collision Prevention**: When a wrong note is reinserted, it cannot collide with the same note appearing naturally in the remaining set within the buffer window
+```typescript
+function selectNextNote(state: LessonAlgorithmState): NoteId {
+  // 1. Build candidate pool
+  let candidates: NoteId[] = [];
 
-**No Session Persistence:**
+  // Add remaining notes (not yet shown this cycle)
+  candidates.push(...state.remainingNotes);
 
-- All state resets when app is closed/refreshed
-- No localStorage or database persistence
-- Each session starts fresh
+  // Add weighted wrong notes (already shown but missed)
+  // Each error weight adds that note multiple times conceptually
+  for (const [note, weight] of state.errorWeights) {
+    for (let i = 0; i < weight; i++) {
+      candidates.push(note);
+    }
+  }
+
+  // 2. Filter out recently shown notes (anti-clustering)
+  candidates = candidates.filter(note => !state.recentBuffer.includes(note));
+
+  // 3. Handle edge case: all candidates filtered out
+  if (candidates.length === 0) {
+    // This can happen if note set is very small (< BUFFER_SIZE)
+    // Fall back to any note not shown most recently
+    candidates = state.fullNoteSet.filter(note => note !== state.recentBuffer[state.recentBuffer.length - 1]);
+  }
+
+  // 4. Random selection from candidates
+  const index = Math.floor(Math.random() * candidates.length);
+  return candidates[index];
+}
+```
+
+#### Algorithm: Process Answer
+
+```typescript
+function processAnswer(
+  state: LessonAlgorithmState,
+  clickedPitchClass: string,
+  isCorrect: boolean
+): LessonAlgorithmState {
+  const note = state.currentNote!;
+
+  // Update statistics
+  const noteStats = state.stats.get(note) || { shown: 0, correct: 0 };
+  noteStats.shown++;
+  if (isCorrect) {
+    noteStats.correct++;
+  } else {
+    // Increment error weight for wrong answers
+    const currentWeight = state.errorWeights.get(note) || 0;
+    state.errorWeights.set(note, currentWeight + 1);
+  }
+  state.stats.set(note, noteStats);
+
+  // Update remaining notes
+  state.remainingNotes.delete(note);
+
+  // Check for cycle completion
+  if (state.remainingNotes.size === 0) {
+    // Refill remaining notes for new cycle
+    state.remainingNotes = new Set(state.fullNoteSet);
+  }
+
+  // Update recent buffer (maintain FIFO, max size)
+  state.recentBuffer.push(note);
+  if (state.recentBuffer.length > BUFFER_SIZE) {
+    state.recentBuffer.shift();  // Remove oldest
+  }
+
+  return state;
+}
+```
+
+#### Anti-Clustering Rules (Summary)
+
+1. **Minimum gap**: A note cannot appear again until at least 4 other notes have been shown
+2. **Buffer persists across cycles**: When remainingNotes is refilled, recentBuffer is NOT cleared
+3. **Weighted probability**: Wrong notes appear more frequently but still respect the minimum gap
+4. **No back-to-back**: Guaranteed by buffer - same note will never appear twice in a row
+
+#### Edge Cases
+
+- **Very small note set** (< 4 notes): Buffer size effectively reduces; some repetition unavoidable
+- **All notes in buffer wrong**: Algorithm will cycle through buffer as it ages out
+- **User never gets a note wrong**: No error weighting, just random cycling through set
 
 ---
 
@@ -185,311 +537,585 @@ On each turn:
 
 ### Technology Stack
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| Framework | React 18+ | Component-based UI, large ecosystem, explicit user requirement |
-| Build Tool | Vite | Fast ESM-based dev server, superior to CRA, excellent React plugin |
-| 3D Rendering | React Three Fiber | Declarative Three.js for React, proper 3D geometry for key shapes, camera positioning, built-in click raycasting |
-| Music Notation | VexFlow | Industry standard for music engraving, handles clefs, accidentals, leger lines correctly, proper typography |
-| Audio | smplr | Lighter than Tone.js, modern API, Splendid Grand Piano samples, sufficient for note playback |
-| State Management | Zustand | Minimal boilerplate, 1KB bundle, handles both simple toggles and complex lesson algorithm state |
-| Styling | Tailwind CSS + Custom CSS | Rapid development for UI, custom CSS for 3D-specific styling |
-| Testing | Vitest + React Testing Library | Pairs with Vite, fast, good React component testing |
+| Component | Technology | Version | Rationale |
+|-----------|------------|---------|-----------|
+| Framework | React | 18.x | Component-based UI, hooks, explicit requirement |
+| Language | TypeScript | 5.x | Type safety, better IDE support, catch errors early |
+| Build Tool | Vite | 5.x | Fast ESM dev server, optimized production builds |
+| 3D Rendering | React Three Fiber | 8.x | Declarative Three.js for React, proper 3D geometry |
+| Three.js | three | 0.160+ | Underlying 3D library (peer dep of R3F) |
+| Music Notation | VexFlow | 4.x | Industry standard notation rendering, handles edge cases |
+| Audio | smplr | latest | Lightweight sampler, Splendid Grand Piano, simple API |
+| State Management | Zustand | 4.x | Minimal boilerplate, no providers, handles complex state |
+| Styling | Tailwind CSS | 3.x | Utility-first, rapid development |
+| Testing | Vitest | 1.x | Fast, Vite-native, Jest-compatible API |
+| Testing (React) | @testing-library/react | 14.x | Component testing best practices |
 
-### Technology Rationale Deep Dive
-
-**React Three Fiber over CSS 3D Transforms:**
-
-Piano keys have complex notched profiles - white keys are not simple rectangles. A D key has notches on both sides where adjacent black keys sit. From the player viewing angle, these notch shapes are visible on the top face of keys.
-
-CSS 3D transforms could approximate this with SVG paths and transformed divs, but it becomes a hack requiring multiple elements per key. R3F provides actual 3D scene with:
-- Proper extruded geometry for key shapes
-- Real camera positioning (player perspective)
-- Built-in raycasting for click detection on 3D objects
-- Potential for lighting/shadows to enhance depth perception
-
-**VexFlow over Custom SVG:**
-
-Music notation has established conventions for:
-- Note head shapes and proportions
-- Accidental positioning relative to note heads
-- Clef symbols (treble, bass)
-- Leger line spacing and length
-- Staff line thickness and spacing
-
-VexFlow implements these correctly. Custom SVG would require manually positioning elements and sourcing/creating proper musical symbols. The ~200KB bundle cost is justified by correctness guarantees and development time savings.
-
-**smplr over Tone.js:**
-
-Tone.js is a full Web Audio framework with synthesizers, effects chains, transport scheduling - features unused for simple "play note on click" functionality. smplr (by the same author as tonal and soundfont-player) is purpose-built for sample playback with a simpler API and smaller footprint.
-
-Fallback: If smplr proves problematic, Tone.js Sampler with lazy-loaded samples is a reliable alternative.
-
-**Zustand over Redux/Context:**
-
-The lesson algorithm requires moderately complex state (remaining notes, wrong note weights, recent buffer). Zustand handles this with:
-- No Provider wrapper boilerplate
-- Direct store access in any component
-- Support for computed/derived state
-- Immer integration for immutable updates if needed
-
-Redux Toolkit would work but adds unnecessary ceremony. React Context + useReducer would require prop drilling or multiple contexts.
-
-### Component Architecture
+### Project Structure
 
 ```
-src/
-├── components/
-│   ├── MainScreen/
-│   │   ├── PianoOverview.tsx      # 88-key visualization with octave boxes
-│   │   ├── OctaveCheckbox.tsx     # Individual octave selection
-│   │   └── SettingsToggles.tsx    # Sharps/flats, audio, show answer toggles
+notes/
+├── docs/
+│   └── Requirements and Technical Specification.md
+├── src/
+│   ├── components/
+│   │   ├── MainScreen/
+│   │   │   ├── MainScreen.tsx           # Screen container
+│   │   │   ├── PianoOverview.tsx        # 88-key 2D visualization
+│   │   │   ├── OctaveBox.tsx            # Single octave group with checkbox
+│   │   │   └── SettingsPanel.tsx        # Toggle switches
+│   │   │
+│   │   ├── LessonScreen/
+│   │   │   ├── LessonScreen.tsx         # Screen container
+│   │   │   ├── StaffDisplay.tsx         # VexFlow wrapper
+│   │   │   ├── PianoKeyboard3D.tsx      # R3F Canvas and scene
+│   │   │   ├── WhiteKey.tsx             # 3D white key mesh
+│   │   │   ├── BlackKey.tsx             # 3D black key mesh
+│   │   │   └── FeedbackOverlay.tsx      # Green/red flash
+│   │   │
+│   │   ├── AnalyticsScreen/
+│   │   │   ├── AnalyticsScreen.tsx      # Screen container
+│   │   │   ├── AccuracyHeader.tsx       # Overall percentage
+│   │   │   └── StatsTable.tsx           # Per-note breakdown
+│   │   │
+│   │   └── ui/
+│   │       ├── Button.tsx               # Reusable button component
+│   │       └── Toggle.tsx               # Reusable toggle switch
 │   │
-│   ├── LessonScreen/
-│   │   ├── StaffDisplay.tsx       # VexFlow integration, note rendering
-│   │   ├── PianoKeyboard3D.tsx    # R3F scene with single octave
-│   │   ├── PianoKey.tsx           # Individual 3D key component
-│   │   └── FeedbackOverlay.tsx    # Green/red flash overlay
+│   ├── stores/
+│   │   ├── settingsStore.ts             # Octave selection, toggles
+│   │   └── lessonStore.ts               # Lesson algorithm state
 │   │
-│   └── AnalyticsScreen/
-│       ├── AccuracyHeader.tsx     # Overall percentage display
-│       └── NoteStatsTable.tsx     # Per-note breakdown table
+│   ├── utils/
+│   │   ├── noteUtils.ts                 # Note generation, parsing, validation
+│   │   ├── staffPositions.ts            # Note → staff position mapping
+│   │   ├── keyGeometry.ts               # 3D key shape definitions
+│   │   └── audioPlayer.ts               # smplr wrapper, lazy loading
+│   │
+│   ├── hooks/
+│   │   ├── useLessonEngine.ts           # Orchestrates lesson flow
+│   │   ├── useAudio.ts                  # Audio playback hook
+│   │   └── useVexFlow.ts                # VexFlow rendering hook
+│   │
+│   ├── types/
+│   │   └── index.ts                     # TypeScript interfaces
+│   │
+│   ├── App.tsx                          # Root component, screen routing
+│   ├── main.tsx                         # Entry point
+│   └── index.css                        # Global styles, Tailwind imports
 │
-├── stores/
-│   ├── settingsStore.ts           # Octave selection, toggles
-│   └── lessonStore.ts             # Lesson algorithm state, actions
+├── public/
+│   └── (static assets if needed)
 │
-├── utils/
-│   ├── noteUtils.ts               # Note generation, naming, staff positioning
-│   ├── keyGeometry.ts             # 3D key shape definitions
-│   └── audioPlayer.ts             # smplr wrapper
-│
-├── hooks/
-│   ├── useLessonEngine.ts         # Lesson algorithm orchestration
-│   └── useAudio.ts                # Audio playback hook
-│
-├── types/
-│   └── index.ts                   # TypeScript interfaces
-│
-└── App.tsx                        # Router/screen management
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.js
+└── postcss.config.js
 ```
 
-### Data Structures
-
-**Note Representation:**
+### Data Types
 
 ```typescript
-interface Note {
-  letter: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
-  accidental: 'sharp' | 'flat' | 'natural';
-  octave: number; // 0-8 for 88-key piano (A0 to C8)
+// types/index.ts
+
+// Note letter names
+export type NoteLetter = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+
+// Accidental types
+export type Accidental = 'sharp' | 'flat' | 'natural';
+
+// Unique note identifier: "C#4", "Bb3", "G5"
+export type NoteId = string;
+
+// Pitch class without octave: "C#", "Bb", "G"
+export type PitchClass = string;
+
+// Structured note representation
+export interface Note {
+  letter: NoteLetter;
+  accidental: Accidental;
+  octave: number;
 }
 
-// Unique identifier string: "C#4", "Bb3", "G5"
-type NoteId = string;
-```
+// Clef types
+export type Clef = 'treble' | 'bass';
 
-**Lesson State:**
+// Lesson statistics per note
+export interface NoteStats {
+  shown: number;
+  correct: number;
+}
 
-```typescript
-interface LessonState {
-  // Configuration (from settings)
-  noteSet: NoteId[];              // Full set of notes for this lesson
+// Settings state
+export interface SettingsState {
+  selectedOctaves: Set<number>;
+  includeSharpsFlats: boolean;
+  audioEnabled: boolean;
+  showCorrectAnswer: boolean;
+}
 
-  // Algorithm state
-  remainingNotes: Set<NoteId>;    // Notes not yet shown this cycle
-  wrongNoteWeights: Map<NoteId, number>; // Error frequency weights
-  recentBuffer: NoteId[];         // Last 4 notes shown (anti-repeat)
-
-  // Current question
+// Lesson algorithm state
+export interface LessonState {
+  isActive: boolean;
+  fullNoteSet: NoteId[];
+  remainingNotes: Set<NoteId>;
+  errorWeights: Map<NoteId, number>;
+  recentBuffer: NoteId[];
   currentNote: NoteId | null;
-
-  // Session statistics
-  stats: Map<NoteId, { shown: number; correct: number }>;
+  stats: Map<NoteId, NoteStats>;
+  feedbackState: 'none' | 'correct' | 'incorrect' | 'showAnswer';
 }
+
+// Screen routing
+export type Screen = 'main' | 'lesson' | 'analytics';
+
+// White key profile types
+export type WhiteKeyProfile = 'type1' | 'type2' | 'type3';
 ```
 
-**Settings State:**
+### Utility Functions
 
 ```typescript
-interface SettingsState {
-  selectedOctaves: Set<number>;   // Which octaves are checked
-  includeSharpsFlats: boolean;    // Accidentals toggle
-  audioEnabled: boolean;          // Audio toggle
-  showCorrectAnswer: boolean;     // Reveal correct key on wrong answer
+// utils/noteUtils.ts
+
+/**
+ * Parse NoteId string into structured Note object
+ * "C#4" → { letter: 'C', accidental: 'sharp', octave: 4 }
+ */
+export function parseNote(noteId: NoteId): Note;
+
+/**
+ * Convert Note object to NoteId string
+ * { letter: 'C', accidental: 'sharp', octave: 4 } → "C#4"
+ */
+export function formatNote(note: Note): NoteId;
+
+/**
+ * Extract pitch class from NoteId (remove octave)
+ * "C#4" → "C#"
+ * "Bb3" → "Bb"
+ */
+export function extractPitchClass(noteId: NoteId): PitchClass;
+
+/**
+ * Check if two pitch classes are enharmonic equivalents
+ * ("C#", "Db") → true
+ * ("C#", "C") → false
+ */
+export function areEnharmonic(a: PitchClass, b: PitchClass): boolean;
+
+/**
+ * Get the physical key position (0-11) for a pitch class
+ * "C" → 0, "C#"/"Db" → 1, "D" → 2, etc.
+ */
+export function getKeyPosition(pitchClass: PitchClass): number;
+
+/**
+ * Determine if a pitch class is a black key
+ */
+export function isBlackKey(pitchClass: PitchClass): boolean;
+
+/**
+ * Get the appropriate clef for a note
+ * Octave >= 4 → treble, else bass
+ */
+export function getClefForNote(noteId: NoteId): Clef;
+
+/**
+ * Generate all notes for given octaves and settings
+ */
+export function generateNoteSet(
+  selectedOctaves: number[],
+  includeSharpsFlats: boolean
+): NoteId[];
+
+/**
+ * Get the white key profile type for a given letter
+ * C, F → 'type1'
+ * D, G, A → 'type2'
+ * E, B → 'type3'
+ */
+export function getWhiteKeyProfile(letter: NoteLetter): WhiteKeyProfile;
+```
+
+### Store Definitions
+
+```typescript
+// stores/settingsStore.ts
+import { create } from 'zustand';
+
+interface SettingsStore {
+  selectedOctaves: Set<number>;
+  includeSharpsFlats: boolean;
+  audioEnabled: boolean;
+  showCorrectAnswer: boolean;
+
+  // Actions
+  toggleOctave: (octave: number) => void;
+  setIncludeSharpsFlats: (value: boolean) => void;
+  setAudioEnabled: (value: boolean) => void;
+  setShowCorrectAnswer: (value: boolean) => void;
+  isStartEnabled: () => boolean;
+}
+
+export const useSettingsStore = create<SettingsStore>((set, get) => ({
+  selectedOctaves: new Set([4]),  // Default: octave 4 only
+  includeSharpsFlats: false,       // Default: off
+  audioEnabled: true,              // Default: on
+  showCorrectAnswer: false,        // Default: off
+
+  toggleOctave: (octave) => set((state) => {
+    const newSet = new Set(state.selectedOctaves);
+    if (newSet.has(octave)) {
+      newSet.delete(octave);
+    } else {
+      newSet.add(octave);
+    }
+    return { selectedOctaves: newSet };
+  }),
+
+  setIncludeSharpsFlats: (value) => set({ includeSharpsFlats: value }),
+  setAudioEnabled: (value) => set({ audioEnabled: value }),
+  setShowCorrectAnswer: (value) => set({ showCorrectAnswer: value }),
+
+  isStartEnabled: () => get().selectedOctaves.size > 0,
+}));
+```
+
+```typescript
+// stores/lessonStore.ts
+import { create } from 'zustand';
+
+interface LessonStore {
+  // State
+  isActive: boolean;
+  fullNoteSet: NoteId[];
+  remainingNotes: Set<NoteId>;
+  errorWeights: Map<NoteId, number>;
+  recentBuffer: NoteId[];
+  currentNote: NoteId | null;
+  stats: Map<NoteId, NoteStats>;
+  feedbackState: 'none' | 'correct' | 'incorrect' | 'showAnswer';
+
+  // Actions
+  startLesson: (noteSet: NoteId[]) => void;
+  selectNextNote: () => void;
+  processAnswer: (clickedPitchClass: PitchClass) => boolean;
+  setFeedbackState: (state: FeedbackState) => void;
+  endLesson: () => void;
+  getSessionStats: () => { overall: number; perNote: Array<NoteId, NoteStats> };
 }
 ```
 
 ### 3D Key Geometry
 
-Piano keys have three distinct white key profiles based on adjacent black keys:
+```typescript
+// utils/keyGeometry.ts
+import * as THREE from 'three';
 
-```
-Type 1 (C, F): Notch on right side only
-Type 2 (D, G, A): Notches on both sides
-Type 3 (E, B): Notch on left side only
-Black keys: Uniform raised rectangle
+// Key dimensions (relative units, scale as needed)
+const WHITE_KEY_WIDTH = 1;
+const WHITE_KEY_LENGTH = 5;
+const WHITE_KEY_HEIGHT = 0.5;
+const BLACK_KEY_WIDTH = 0.6;
+const BLACK_KEY_LENGTH = 3;
+const BLACK_KEY_HEIGHT = 0.5;
+const NOTCH_DEPTH = BLACK_KEY_LENGTH;
+const NOTCH_WIDTH = BLACK_KEY_WIDTH / 2 + 0.05;  // Half black key + gap
+
+/**
+ * Create white key geometry with appropriate notch profile
+ */
+export function createWhiteKeyGeometry(profile: WhiteKeyProfile): THREE.ExtrudeGeometry {
+  const shape = new THREE.Shape();
+
+  // Base rectangle with notches based on profile
+  // Type 1 (C, F): notch on right
+  // Type 2 (D, G, A): notches on both sides
+  // Type 3 (E, B): notch on left
+
+  // Implementation: define 2D shape path, then extrude
+  // ... (detailed path construction)
+
+  const extrudeSettings = {
+    depth: WHITE_KEY_HEIGHT,
+    bevelEnabled: false,
+  };
+
+  return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+}
+
+/**
+ * Create black key geometry (simple box)
+ */
+export function createBlackKeyGeometry(): THREE.BoxGeometry {
+  return new THREE.BoxGeometry(BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, BLACK_KEY_LENGTH);
+}
 ```
 
-Each white key is an extruded polygon:
+### Audio Integration
 
 ```typescript
-// Simplified - actual values need measurement
-const KEY_PROFILES = {
-  type1: [/* polygon points for C/F shape */],
-  type2: [/* polygon points for D/G/A shape */],
-  type3: [/* polygon points for E/B shape */],
-  black: [/* simple rectangle */]
-};
+// utils/audioPlayer.ts
+import { Splendid } from 'smplr';
+
+let piano: Splendid | null = null;
+let isLoading = false;
+let isLoaded = false;
+
+/**
+ * Initialize audio (call when audio is enabled)
+ */
+export async function initAudio(): Promise<void> {
+  if (piano || isLoading) return;
+
+  isLoading = true;
+  const context = new AudioContext();
+  piano = new Splendid(context);
+  await piano.load();
+  isLoaded = true;
+  isLoading = false;
+}
+
+/**
+ * Play a note
+ * @param noteId - e.g., "C#4"
+ */
+export function playNote(noteId: NoteId): void {
+  if (!piano || !isLoaded) return;
+
+  // Convert NoteId to MIDI note number or smplr format
+  // smplr typically uses note names like "C4", "Db4"
+  const smplrNote = convertToSmplrFormat(noteId);
+  piano.start(smplrNote);
+}
+
+/**
+ * Check if audio is ready
+ */
+export function isAudioReady(): boolean {
+  return isLoaded;
+}
 ```
 
-Camera positioned above and angled down (~30-45 degrees from horizontal) to simulate player seated at piano.
-
-### Staff Position Mapping
-
-Each note maps to a vertical position on the staff based on clef:
+### VexFlow Integration
 
 ```typescript
-// Treble clef: Middle C (C4) is one leger line below staff
-// Bass clef: Middle C (C4) is one leger line above staff
+// hooks/useVexFlow.ts
+import { useEffect, useRef } from 'react';
+import Vex from 'vexflow';
 
-const TREBLE_POSITIONS: Record<string, number> = {
-  'E4': 0,   // First line (bottom)
-  'F4': 0.5, // First space
-  'G4': 1,   // Second line
-  // ... etc
-};
+interface UseVexFlowOptions {
+  noteId: NoteId;
+  clef: Clef;
+  containerRef: React.RefObject<HTMLDivElement>;
+}
 
-const BASS_POSITIONS: Record<string, number> = {
-  'G2': 0,   // First line (bottom)
-  'A2': 0.5, // First space
-  // ... etc
-};
+export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-// Determine clef based on note range
-function getClefForNote(note: NoteId): 'treble' | 'bass' {
-  const octave = extractOctave(note);
-  return octave >= 4 ? 'treble' : 'bass';
+    // Clear previous render
+    containerRef.current.innerHTML = '';
+
+    const { Renderer, Stave, StaveNote, Voice, Formatter, Accidental } = Vex.Flow;
+
+    const renderer = new Renderer(containerRef.current, Renderer.Backends.SVG);
+    renderer.resize(400, 150);
+    const context = renderer.getContext();
+
+    // Create stave with clef
+    const stave = new Stave(10, 20, 380);
+    stave.addClef(clef);
+    stave.setContext(context).draw();
+
+    // Apply 50% opacity to clef via CSS after render
+    const clefElement = containerRef.current.querySelector('.vf-clef');
+    if (clefElement) {
+      (clefElement as SVGElement).style.opacity = '0.5';
+    }
+
+    // Parse note and create StaveNote
+    const note = parseNote(noteId);
+    const vexKey = `${note.letter.toLowerCase()}/${note.octave}`;
+    const staveNote = new StaveNote({
+      keys: [vexKey],
+      duration: 'w',  // whole note
+      clef: clef,
+    });
+
+    // Add accidental if needed
+    if (note.accidental === 'sharp') {
+      staveNote.addModifier(new Accidental('#'));
+    } else if (note.accidental === 'flat') {
+      staveNote.addModifier(new Accidental('b'));
+    }
+
+    // Create voice and format
+    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+    voice.addTickable(staveNote);
+    new Formatter().joinVoices([voice]).format([voice], 350);
+    voice.draw(context, stave);
+
+  }, [noteId, clef, containerRef]);
 }
 ```
 
 ---
 
-## User Interface Specifications
+## Error Handling
+
+### Initialization Errors
+
+| Error | Handling |
+|-------|----------|
+| WebGL not supported | Show message: "Your browser doesn't support 3D graphics. Please use a modern browser like Chrome, Firefox, or Edge." Disable lesson start. |
+| VexFlow fails to load | Show message: "Music notation failed to load. Please refresh the page." |
+| Audio context blocked | Show message: "Audio was blocked. Click anywhere to enable sound." (Browser autoplay policies) |
+| Audio samples fail to load | Silently disable audio, show small notice: "Audio unavailable" |
+
+### Runtime Errors
+
+| Error | Handling |
+|-------|----------|
+| R3F render error | Catch with error boundary, show fallback message |
+| Note generation returns empty | Should not happen with valid input; defensive check, show error |
+| Algorithm state corruption | Reset to initial state, log error for debugging |
+
+### Implementation Notes
+
+- Wrap R3F Canvas in React Error Boundary
+- Use try-catch around audio initialization
+- Validate settings before starting lesson
+- Log errors to console in development
+
+---
+
+## Browser Support
+
+**Target Browsers:**
+- Chrome 90+
+- Firefox 90+
+- Safari 15+
+- Edge 90+
+
+**Requirements:**
+- WebGL 2.0 support (for Three.js)
+- Web Audio API support (for smplr)
+- ES2020+ JavaScript support
+
+**Not Supported:**
+- Internet Explorer (any version)
+- Mobile browsers (MVP is desktop-focused)
+
+---
+
+## Performance Considerations
+
+- **3D Rendering**: Single octave (12 keys) is trivial for any modern GPU
+- **VexFlow**: Renders once per note change, SVG is lightweight
+- **Audio**: Lazy-load samples, only load when audio enabled
+- **State Updates**: Zustand is optimized, minimal re-renders
+- **Bundle Size**: Monitor with `vite-bundle-analyzer`, target < 500KB initial JS
+
+---
+
+## Accessibility Notes (Future Enhancement)
+
+MVP does not include full accessibility support. Future considerations:
+
+- Keyboard navigation for piano keys (1-7 for white, q-t for black?)
+- ARIA labels for screen readers
+- High contrast mode
+- Focus indicators
+
+---
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+
+- `noteUtils.ts`: All parsing, formatting, validation functions
+- `lessonStore.ts`: Algorithm state transitions, edge cases
+- `settingsStore.ts`: Toggle behavior, validation
+
+### Component Tests (React Testing Library)
+
+- Main screen: Octave selection, toggle interactions, start button state
+- Analytics screen: Table rendering, sorting, accuracy calculation
+
+### Integration Tests
+
+- Full lesson flow: Start → Answer questions → Stop → View analytics
+- Audio playback (mocked)
+
+### Manual Testing Checklist
+
+- [ ] All 9 octave checkboxes work
+- [ ] Start button enables/disables correctly
+- [ ] 3D keyboard renders and keys are clickable
+- [ ] Correct/incorrect feedback displays
+- [ ] Notes cycle through properly
+- [ ] Wrong notes appear more frequently
+- [ ] Anti-clustering works (no immediate repeats)
+- [ ] Analytics shows correct data
+- [ ] Audio plays when enabled
+- [ ] Audio silent when disabled
+
+---
+
+## Acceptance Criteria
 
 ### Main Screen
-
-**Piano Overview Dimensions:**
-- Full width of viewport (responsive)
-- Height proportional to maintain key aspect ratios
-- Octave boxes have visible borders with padding
-- Checkboxes aligned center below each octave box
-
-**Toggle Controls:**
-- Grouped in a settings panel
-- Clear labels: "Include Sharps & Flats", "Enable Audio", "Show Correct Answer"
-- Switch/toggle UI component (not checkboxes for visual distinction from octave selection)
-
-**Start Button:**
-- Prominent placement below settings
-- Clear disabled visual state (grayed out, no hover effects)
-- Enabled state with primary color
-
-### Lesson Screen
-
-**Staff Display:**
-- Large, centered
-- Minimum height to clearly show leger lines above/below
-- Clef at 50% opacity, note at 100% opacity
-- Accidentals positioned per musical convention (to the left of note head)
-
-**3D Keyboard:**
-- Single octave, large keys for easy clicking
-- Responsive: fills available width while maintaining proportions
-- Clear visual distinction between white and black keys
-- Hover state on keys (subtle highlight)
-
-**Feedback Flash:**
-- Full background color change (not just key)
-- Green: #22c55e or similar (success)
-- Red: #ef4444 or similar (error)
-- Duration: 800-1000ms
-- Smooth fade transition
-
-### Analytics Screen
-
-**Accuracy Display:**
-- Large font size for overall percentage
-- Positioned prominently at top
-
-**Stats Table:**
-- Sortable by clicking column headers (optional enhancement)
-- Clear row separation
-- Percentage column with color coding (red for low, yellow for medium, green for high)
-
----
-
-## Audio Specifications
-
-**Sample Loading:**
-- Lazy load: samples loaded only when audio is enabled
-- Load samples for selected octaves only (optimization)
-- Loading indicator if samples not ready when user clicks
-
-**Playback:**
-- Trigger on correct answer (play the note that was shown)
-- Trigger on wrong answer (play the note the user clicked, optionally followed by correct note)
-- Short duration (~500ms) to not delay next question
-
-**Controls:**
-- Global mute via toggle on main screen
-- No volume control in MVP (future enhancement)
-
----
-
-## Future Considerations
-
-Items explicitly out of scope for MVP but noted for potential future development:
-
-1. **Key Signatures**: Practice reading notes with key signatures applied (all F's are F# in G major, etc.)
-2. **Timing/Speed Mode**: Track response time, add time pressure challenges
-3. **Session Persistence**: Save progress across browser sessions
-4. **Multiple Notes**: Show chords or intervals instead of single notes
-5. **Grand Staff**: Show both treble and bass clef simultaneously
-6. **Mobile Optimization**: Touch-friendly 3D interaction, responsive layout for small screens
-7. **Achievements/Gamification**: Streak tracking, milestones, progress badges
-8. **Custom Practice Sets**: Save favorite octave/toggle configurations
-9. **Note Naming Mode**: Reverse exercise - show key, user types note name
-10. **MIDI Input**: Connect physical MIDI keyboard for input instead of clicking
-
----
-
-## Acceptance Criteria Summary
-
-### Main Screen
-- [ ] 88 piano keys displayed with octave groupings
-- [ ] Checkboxes for each octave, first octave checked by default
-- [ ] Three toggle switches (sharps/flats, audio, show answer)
+- [ ] 88-key piano visualization with octave groupings displayed
+- [ ] 9 checkboxes (one per octave), octave 4 checked by default
+- [ ] Three toggle switches with correct defaults (sharps/flats: off, audio: on, show answer: off)
 - [ ] Start button disabled when no octaves selected
-- [ ] Start button navigates to lesson screen
+- [ ] Start button enabled when at least one octave selected
+- [ ] Clicking start navigates to lesson screen
 
 ### Lesson Screen
-- [ ] Staff displays with correct clef at 50% opacity
-- [ ] Note displays with accidentals when applicable
-- [ ] 3D keyboard renders single octave at player angle
-- [ ] Clicking key provides immediate color feedback
-- [ ] Wrong notes tracked and shown more frequently
-- [ ] Same note never appears within 4-note window
+- [ ] Staff renders with clef at 50% opacity
+- [ ] Note renders correctly positioned on staff
+- [ ] Accidentals display when applicable
+- [ ] Leger lines display for notes outside staff
+- [ ] 3D keyboard shows single octave at player viewing angle
+- [ ] Clicking key triggers answer validation
+- [ ] Correct answer: green flash, advance to next note
+- [ ] Wrong answer: red flash, optionally show correct key
+- [ ] Audio plays note on answer (when enabled)
 - [ ] Stop button navigates to analytics
 
 ### Analytics Screen
-- [ ] Overall accuracy percentage displayed
-- [ ] Per-note statistics in table format
-- [ ] Table sorted by accuracy (worst first)
-- [ ] Navigation back to main screen
+- [ ] Overall accuracy percentage displayed prominently
+- [ ] Table shows all practiced notes
+- [ ] Table sorted by accuracy ascending (worst first)
+- [ ] Row colors indicate performance (red/yellow/green)
+- [ ] Back button returns to main screen
 
-### Algorithm
-- [ ] All notes in set shown before cycling
-- [ ] Wrong notes weighted for higher frequency
-- [ ] Anti-clustering enforced across cycle boundaries
-- [ ] Enharmonic equivalents treated as separate items when sharps/flats enabled
+### Learning Algorithm
+- [ ] All selected notes generated correctly (including enharmonics when enabled)
+- [ ] Notes cycle through without repetition until set complete
+- [ ] Wrong notes weighted to appear more frequently
+- [ ] Same note never appears within 4-note window
+- [ ] Buffer persists across set cycles (no boundary repetition)
+- [ ] Statistics accurately track shown/correct counts
+
+---
+
+## Implementation Order (Suggested)
+
+1. **Project Setup**: Vite, React, TypeScript, Tailwind, folder structure
+2. **Types & Utils**: Note types, parsing, generation functions
+3. **Stores**: Settings store, lesson store (without algorithm)
+4. **Main Screen**: Static layout, octave visualization, toggles, navigation
+5. **Lesson Algorithm**: Core selection/answer logic with tests
+6. **Lesson Screen (2D first)**: Staff display with VexFlow, basic keyboard (2D placeholder)
+7. **3D Keyboard**: R3F integration, key geometry, click handling
+8. **Feedback System**: Flash overlay, correct answer highlight
+9. **Audio**: smplr integration, lazy loading
+10. **Analytics Screen**: Table rendering, stats calculation
+11. **Polish**: Transitions, responsive adjustments, error handling
+12. **Testing**: Unit tests, integration tests, manual QA
