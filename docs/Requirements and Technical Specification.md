@@ -539,7 +539,7 @@ function processAnswer(
 
 | Component | Technology | Version | Rationale |
 |-----------|------------|---------|-----------|
-| Runtime | Node.js | 20.x LTS | Required for build tooling, testing, dev server |
+| Runtime | Node.js | 22.x LTS | Required for build tooling, testing, dev server |
 | Framework | React | 18.x | Component-based UI, hooks, explicit requirement |
 | Language | TypeScript | 5.x | Type safety, better IDE support, catch errors early |
 | Build Tool | Vite | 5.x | Fast ESM dev server, optimized production builds |
@@ -613,7 +613,7 @@ notes/
 ├── e2e/                         # Playwright E2E tests
 │   └── lesson-flow.spec.ts
 ├── index.html
-├── package.json                  # Must include "engines": { "node": ">=20.0.0" }
+├── package.json                  # Must include "engines": { "node": ">=22.0.0" }
 ├── tsconfig.json
 ├── vite.config.ts
 ├── tailwind.config.js
