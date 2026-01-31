@@ -539,17 +539,20 @@ function processAnswer(
 
 | Component | Technology | Version | Rationale |
 |-----------|------------|---------|-----------|
+| Runtime | Node.js | 20.x LTS | Required for build tooling, testing, dev server |
 | Framework | React | 18.x | Component-based UI, hooks, explicit requirement |
 | Language | TypeScript | 5.x | Type safety, better IDE support, catch errors early |
 | Build Tool | Vite | 5.x | Fast ESM dev server, optimized production builds |
 | 3D Rendering | React Three Fiber | 8.x | Declarative Three.js for React, proper 3D geometry |
-| Three.js | three | 0.160+ | Underlying 3D library (peer dep of R3F) |
+| Three.js | three | 0.160.x | Underlying 3D library (peer dep of R3F) |
 | Music Notation | VexFlow | 4.x | Industry standard notation rendering, handles edge cases |
-| Audio | smplr | latest | Lightweight sampler, Splendid Grand Piano, simple API |
+| Audio | smplr | 0.15.x | Lightweight sampler, Splendid Grand Piano, simple API |
 | State Management | Zustand | 4.x | Minimal boilerplate, no providers, handles complex state |
 | Styling | Tailwind CSS | 3.x | Utility-first, rapid development |
+| UI Primitives | Radix UI | latest | Accessible, unstyled components for toggles, buttons |
 | Testing | Vitest | 1.x | Fast, Vite-native, Jest-compatible API |
 | Testing (React) | @testing-library/react | 14.x | Component testing best practices |
+| Testing (E2E) | Playwright | 1.x | End-to-end browser testing for full lesson flow |
 
 ### Project Structure
 
@@ -607,12 +610,15 @@ notes/
 ├── public/
 │   └── (static assets if needed)
 │
+├── e2e/                         # Playwright E2E tests
+│   └── lesson-flow.spec.ts
 ├── index.html
-├── package.json
+├── package.json                  # Must include "engines": { "node": ">=20.0.0" }
 ├── tsconfig.json
 ├── vite.config.ts
 ├── tailwind.config.js
-└── postcss.config.js
+├── postcss.config.js
+└── playwright.config.ts
 ```
 
 ### Data Types
@@ -1014,11 +1020,40 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
 
 ## Performance Considerations
 
+### Bundle Size Target: < 500KB Initial JS
+
+This is a hard constraint. VexFlow (~754KB minified) and Three.js/R3F (~500KB+ minified) exceed this individually. Meeting this target requires mandatory lazy-loading.
+
+### Mandatory Lazy-Loading Strategy
+
+The following MUST be dynamically imported, not included in the main bundle:
+
+| Module | Load Trigger | Rationale |
+|--------|--------------|-----------|
+| VexFlow | Lesson screen mount | ~754KB minified; Main screen doesn't need notation |
+| Three.js + R3F | Lesson screen mount | ~500KB+ minified; Main screen doesn't need 3D |
+| smplr + samples | Audio enabled + first playback | Samples are large; only load when user wants audio |
+
+**Implementation pattern:**
+```typescript
+// In LessonScreen.tsx
+const StaffDisplay = lazy(() => import('./StaffDisplay'));
+const PianoKeyboard3D = lazy(() => import('./PianoKeyboard3D'));
+
+// Wrap with Suspense and loading indicator
+<Suspense fallback={<LoadingSpinner />}>
+  <StaffDisplay noteId={currentNote} />
+  <PianoKeyboard3D onKeyClick={handleClick} />
+</Suspense>
+```
+
+**Main screen must load in < 500KB.** Verify with `npx vite-bundle-visualizer` before release.
+
+### Other Considerations
+
 - **3D Rendering**: Single octave (12 keys) is trivial for any modern GPU
-- **VexFlow**: Renders once per note change, SVG is lightweight
-- **Audio**: Lazy-load samples, only load when audio enabled
+- **VexFlow**: Renders once per note change, SVG output is lightweight at runtime
 - **State Updates**: Zustand is optimized, minimal re-renders
-- **Bundle Size**: Monitor with `vite-bundle-analyzer`, target < 500KB initial JS
 
 ---
 
@@ -1046,10 +1081,12 @@ MVP does not include full accessibility support. Future considerations:
 - Main screen: Octave selection, toggle interactions, start button state
 - Analytics screen: Table rendering, sorting, accuracy calculation
 
-### Integration Tests
+### E2E Tests (Playwright)
 
 - Full lesson flow: Start → Answer questions → Stop → View analytics
-- Audio playback (mocked)
+- Verify 3D keyboard renders and responds to clicks
+- Verify staff notation displays correctly
+- Audio playback (mocked or with Web Audio API stubbing)
 
 ### Manual Testing Checklist
 
