@@ -12,7 +12,7 @@ interface BlackKeyProps {
 }
 
 const BLACK_KEY_COLOR = '#1a1a1a';
-const BLACK_KEY_HOVER_COLOR = '#333333';
+const BLACK_KEY_HOVER_COLOR = '#2a2a2a';
 const HIGHLIGHTED_COLOR = '#3b82f6';
 
 export function BlackKey({
@@ -48,7 +48,7 @@ export function BlackKey({
         onClick();
       }}
     >
-      <meshStandardMaterial color={color} />
+      <meshStandardMaterial color={color} flatShading={true} side={2} />
     </mesh>
   );
 }

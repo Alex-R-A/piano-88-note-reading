@@ -58,12 +58,15 @@ function KeyboardScene({
   }, [startX]);
 
   const blackKeyPositions = useMemo(() => {
+    // Position black keys so their back edge aligns with white key back edge
+    // Shift forward to prevent rear overhang
+    const zOffset = -(WHITE_KEY_LENGTH - BLACK_KEY_LENGTH) / 2 + 0.8;
     return BLACK_KEYS.map(({ pitchClass, whiteKeyIndex }) => ({
       pitchClass,
       position: [
         startX + (whiteKeyIndex + 0.5) * WHITE_KEY_WIDTH,
         WHITE_KEY_HEIGHT + BLACK_KEY_HEIGHT / 2,
-        -(WHITE_KEY_LENGTH - BLACK_KEY_LENGTH) / 2,
+        zOffset,
       ] as [number, number, number],
     }));
   }, [startX]);
@@ -109,8 +112,8 @@ export function PianoKeyboard3D({
       <WebGLErrorBoundary>
         <Canvas
           camera={{
-            position: [0, 4, 6],
-            fov: 35,
+            position: [0, 9, 18],
+            fov: 14,
           }}
           gl={{ antialias: true }}
           scene={{ background: new THREE.Color('#d1d5db') }}
