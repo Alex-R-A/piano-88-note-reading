@@ -32,11 +32,12 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   const audioInitialized = useRef(false);
 
   // Trigger page transition when a new note is selected
+  // Uses a key-based approach: increment key to remount the overlay with fresh animation
   useEffect(() => {
     if (noteSelectionId !== prevSelectionIdRef.current && noteSelectionId > 0) {
       prevSelectionIdRef.current = noteSelectionId;
       setShowTransition(true);
-      const timer = setTimeout(() => setShowTransition(false), 300);
+      const timer = setTimeout(() => setShowTransition(false), 400);
       return () => clearTimeout(timer);
     }
   }, [noteSelectionId]);
@@ -80,11 +81,15 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4 relative">
       {/* Note transition overlay - white flash that fades out */}
-      <div
-        className={`fixed inset-0 bg-white pointer-events-none z-50 transition-opacity duration-300 ${
-          showTransition ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
+      {showTransition && (
+        <div
+          key={noteSelectionId}
+          className="fixed inset-0 bg-white pointer-events-none z-50"
+          style={{
+            animation: 'fadeOut 400ms ease-out forwards',
+          }}
+        />
+      )}
 
       {/* Feedback Overlay - renders behind content via z-index */}
       <FeedbackOverlay feedbackState={feedbackState} />

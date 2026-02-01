@@ -19,3 +19,13 @@
 .screen-transition {
   will-change: opacity;
 }
+
+/* Note presentation transition - starts opaque, fades to transparent */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
