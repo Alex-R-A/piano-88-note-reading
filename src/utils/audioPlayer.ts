@@ -34,35 +34,44 @@ export function convertToSmplrFormat(noteId: NoteId): string {
  * Call resumeAudioContext() after a user gesture to ensure playback works.
  */
 export async function initAudio(): Promise<void> {
+  console.log('[Audio] initAudio called, isLoaded:', isLoaded, 'isLoading:', isLoading);
+
   // Return existing promise if already loading
   if (loadPromise) {
+    console.log('[Audio] Already loading, returning existing promise');
     return loadPromise;
   }
 
   // Already loaded
   if (isLoaded && piano) {
+    console.log('[Audio] Already loaded, returning');
     return Promise.resolve();
   }
 
   isLoading = true;
+  console.log('[Audio] Starting initialization...');
 
   loadPromise = (async () => {
     try {
       // Create AudioContext (may be suspended until user gesture)
       audioContext = new AudioContext();
+      console.log('[Audio] AudioContext created, state:', audioContext.state);
 
       // Create piano instrument and wait for samples to load
       piano = new SplendidGrandPiano(audioContext);
+      console.log('[Audio] Loading piano samples...');
       await piano.load;
+      console.log('[Audio] Piano samples loaded!');
 
       isLoaded = true;
+      console.log('[Audio] Initialization complete, isLoaded:', isLoaded);
     } catch (error) {
       // Reset state on failure so retry is possible
       audioContext = null;
       piano = null;
       loadPromise = null;
       isLoaded = false;
-      console.error('Failed to initialize audio:', error);
+      console.error('[Audio] Failed to initialize:', error);
       throw error;
     } finally {
       isLoading = false;
@@ -78,18 +87,21 @@ export async function initAudio(): Promise<void> {
  * Returns true if context is running, false if resume failed or no context exists.
  */
 export async function resumeAudioContext(): Promise<boolean> {
+  console.log('[Audio] resumeAudioContext called, audioContext:', !!audioContext);
   if (!audioContext) {
+    console.log('[Audio] No audioContext to resume');
     return false;
   }
 
   const state = audioContext.state;
+  console.log('[Audio] AudioContext state:', state);
   if (state === 'suspended') {
     try {
       await audioContext.resume();
-      // Check state again after resume (re-read to avoid type narrowing issue)
+      console.log('[Audio] AudioContext resumed, new state:', audioContext.state);
       return audioContext.state === 'running';
     } catch (error) {
-      console.error('Failed to resume AudioContext:', error);
+      console.error('[Audio] Failed to resume AudioContext:', error);
       return false;
     }
   }
@@ -104,18 +116,22 @@ export async function resumeAudioContext(): Promise<boolean> {
  * @param noteId - Note to play in format like "C#4", "Bb3", "G5"
  */
 export function playNote(noteId: NoteId): void {
+  console.log('[Audio] playNote called:', noteId, 'piano:', !!piano, 'isLoaded:', isLoaded);
   if (!piano || !isLoaded) {
+    console.log('[Audio] Cannot play - piano not ready');
     return;
   }
 
   const smplrNote = convertToSmplrFormat(noteId);
+  console.log('[Audio] Playing note:', smplrNote);
 
   try {
     // Start the note with default velocity
     // The note will ring out naturally (piano sound decays)
     piano.start({ note: smplrNote });
+    console.log('[Audio] Note started successfully');
   } catch (error) {
-    console.error(`Failed to play note ${noteId}:`, error);
+    console.error('[Audio] Failed to play note:', noteId, error);
   }
 }
 

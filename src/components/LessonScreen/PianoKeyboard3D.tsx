@@ -1,6 +1,7 @@
 // components/LessonScreen/PianoKeyboard3D.tsx
 import { Canvas } from '@react-three/fiber';
 import { useMemo } from 'react';
+import * as THREE from 'three';
 import { WhiteKey } from './WhiteKey';
 import { BlackKey } from './BlackKey';
 import { WebGLErrorBoundary } from '@/components/ui';
@@ -8,6 +9,8 @@ import {
   WHITE_KEY_WIDTH,
   WHITE_KEY_HEIGHT,
   WHITE_KEY_LENGTH,
+  BLACK_KEY_HEIGHT,
+  BLACK_KEY_LENGTH,
 } from '@/utils/keyGeometry';
 import { areEnharmonic } from '@/utils/noteUtils';
 import type { PitchClass, NoteLetter } from '@/types';
@@ -17,24 +20,16 @@ interface PianoKeyboard3DProps {
   highlightedKey: PitchClass | null;
 }
 
-// White keys in order: C, D, E, F, G, A, B
 const WHITE_KEYS: NoteLetter[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
-// Black keys with their pitch classes and positions relative to white keys
-// Position is the index of the white key to the LEFT of the black key
-// C#/Db is between C (0) and D (1), so it's at position 0.5
 const BLACK_KEYS: { pitchClass: PitchClass; whiteKeyIndex: number }[] = [
-  { pitchClass: 'C#', whiteKeyIndex: 0 }, // Between C and D
-  { pitchClass: 'D#', whiteKeyIndex: 1 }, // Between D and E
-  { pitchClass: 'F#', whiteKeyIndex: 3 }, // Between F and G
-  { pitchClass: 'G#', whiteKeyIndex: 4 }, // Between G and A
-  { pitchClass: 'A#', whiteKeyIndex: 5 }, // Between A and B
+  { pitchClass: 'C#', whiteKeyIndex: 0 },
+  { pitchClass: 'D#', whiteKeyIndex: 1 },
+  { pitchClass: 'F#', whiteKeyIndex: 3 },
+  { pitchClass: 'G#', whiteKeyIndex: 4 },
+  { pitchClass: 'A#', whiteKeyIndex: 5 },
 ];
 
-/**
- * Check if a pitch class should be highlighted.
- * Uses enharmonic equivalence check.
- */
 function isKeyHighlighted(
   keyPitchClass: PitchClass,
   highlightedKey: PitchClass | null
@@ -43,18 +38,13 @@ function isKeyHighlighted(
   return areEnharmonic(keyPitchClass, highlightedKey);
 }
 
-/**
- * The actual 3D scene content (must be inside Canvas)
- */
 function KeyboardScene({
   onKeyClick,
   highlightedKey,
 }: PianoKeyboard3DProps) {
-  // Calculate keyboard dimensions for centering
   const keyboardWidth = WHITE_KEYS.length * WHITE_KEY_WIDTH;
   const startX = -keyboardWidth / 2 + WHITE_KEY_WIDTH / 2;
 
-  // Memoize white key data
   const whiteKeyPositions = useMemo(() => {
     return WHITE_KEYS.map((letter, index) => ({
       letter,
@@ -62,31 +52,28 @@ function KeyboardScene({
       position: [
         startX + index * WHITE_KEY_WIDTH,
         WHITE_KEY_HEIGHT / 2,
-        WHITE_KEY_LENGTH / 2,
+        0,
       ] as [number, number, number],
     }));
   }, [startX]);
 
-  // Memoize black key data
   const blackKeyPositions = useMemo(() => {
     return BLACK_KEYS.map(({ pitchClass, whiteKeyIndex }) => ({
       pitchClass,
       position: [
         startX + (whiteKeyIndex + 0.5) * WHITE_KEY_WIDTH,
-        WHITE_KEY_HEIGHT,
-        WHITE_KEY_LENGTH / 2,
+        WHITE_KEY_HEIGHT + BLACK_KEY_HEIGHT / 2,
+        -(WHITE_KEY_LENGTH - BLACK_KEY_LENGTH) / 2,
       ] as [number, number, number],
     }));
   }, [startX]);
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 5]} intensity={0.8} />
-      <directionalLight position={[-5, 5, -5]} intensity={0.3} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[10, 20, 10]} intensity={0.8} />
+      <directionalLight position={[-10, 10, -10]} intensity={0.3} />
 
-      {/* White Keys */}
       {whiteKeyPositions.map(({ letter, pitchClass, position }) => (
         <WhiteKey
           key={letter}
@@ -97,7 +84,6 @@ function KeyboardScene({
         />
       ))}
 
-      {/* Black Keys */}
       {blackKeyPositions.map(({ pitchClass, position }) => (
         <BlackKey
           key={pitchClass}
@@ -111,35 +97,25 @@ function KeyboardScene({
   );
 }
 
-/**
- * 3D Piano Keyboard component with React Three Fiber.
- * Displays a single octave (7 white keys, 5 black keys).
- * Camera positioned for player perspective: slightly above, looking down at keys from the front.
- * - Camera at negative Z (in front of keyboard) looking toward positive Z (back of keys)
- * - Elevated Y to look down at the keys
- * - Looking at the center of the keyboard
- */
 export function PianoKeyboard3D({
   onKeyClick,
   highlightedKey,
 }: PianoKeyboard3DProps) {
   return (
     <div
-      className="bg-gray-800 rounded-lg overflow-hidden"
-      style={{ width: 600, height: 250 }}
+      className="rounded-lg overflow-hidden mx-auto"
+      style={{ width: 1800, height: 600 }}
     >
       <WebGLErrorBoundary>
         <Canvas
           camera={{
-            // Player perspective: low angle in front of keyboard, near key level
-            // This emphasizes the front faces of the keys like a real player view
-            position: [0, 1.5, -6],
-            fov: 45,
+            position: [0, 4, 6],
+            fov: 35,
           }}
           gl={{ antialias: true }}
+          scene={{ background: new THREE.Color('#d1d5db') }}
           onCreated={({ camera }) => {
-            // Look at slightly above the keyboard center
-            camera.lookAt(0, 0.5, 1);
+            camera.lookAt(0, 0, 0);
           }}
         >
           <KeyboardScene

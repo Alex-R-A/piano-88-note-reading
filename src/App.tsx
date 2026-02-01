@@ -6,6 +6,7 @@ import { AnalyticsScreen } from '@/components/AnalyticsScreen';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { generateNoteSet } from '@/utils/noteUtils';
+import { initAudio, resumeAudioContext } from '@/utils/audioPlayer';
 import type { Screen } from '@/types';
 
 // Minimum viewport width per spec line 168
@@ -157,8 +158,22 @@ function App() {
   /**
    * Handle starting a lesson from MainScreen.
    * Generates note set and initializes lesson state before transitioning.
+   * Also initializes audio since this is triggered by user gesture (click).
    */
-  const handleStartLesson = useCallback(() => {
+  const handleStartLesson = useCallback(async () => {
+    console.log('[App] Starting lesson, initializing audio first...');
+
+    // Initialize audio now (user gesture context from button click)
+    if (audioEnabled) {
+      try {
+        await initAudio();
+        await resumeAudioContext();
+        console.log('[App] Audio initialized successfully');
+      } catch (err) {
+        console.error('[App] Audio init failed:', err);
+      }
+    }
+
     // Generate note set from current settings
     const noteSet = generateNoteSet([...selectedOctaves], includeSharpsFlats);
 
@@ -167,7 +182,7 @@ function App() {
 
     // Navigate to lesson screen
     navigateTo('lesson');
-  }, [selectedOctaves, includeSharpsFlats, startLesson, navigateTo]);
+  }, [selectedOctaves, includeSharpsFlats, startLesson, navigateTo, audioEnabled]);
 
   /**
    * Handle ending lesson from LessonScreen.

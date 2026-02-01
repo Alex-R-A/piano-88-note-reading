@@ -28,13 +28,13 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     const renderer = new Renderer(containerRef.current, Renderer.Backends.SVG);
     rendererRef.current = renderer;
 
-    // Size the renderer (400x150 per spec)
-    renderer.resize(400, 150);
+    // Size the renderer (1200x450 - 3x size)
+    renderer.resize(1200, 450);
     const context = renderer.getContext();
+    context.scale(3, 3); // Scale everything 3x
 
-    // Create stave with clef
-    // Positioning: x=10, y=20, width=380 leaves margins
-    const stave = new Stave(10, 20, 380);
+    // Create stave with clef - centered vertically to allow room for leger lines
+    const stave = new Stave(10, 25, 380);
     stave.addClef(clef);
     stave.setContext(context).draw();
 
@@ -62,16 +62,15 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
       staveNote.addModifier(new Accidental('b'));
     }
 
-    // Create voice and format
-    // 4 beats / beat value 4 = one measure of 4/4 for a whole note
+    // Create voice and format - center the note by using larger width
     const voice = new Voice({ numBeats: 4, beatValue: 4 });
     voice.addTickable(staveNote);
 
-    // Format the voice to fit within the stave width (minus padding)
-    new Formatter().joinVoices([voice]).format([voice], 350);
+    // Format with padding to center the note
+    new Formatter().joinVoices([voice]).format([voice], 100);
 
-    // Draw the voice
-    voice.draw(context, stave);
+    // Draw the voice with x offset to center horizontally
+    voice.draw(context, stave, 150);
 
     // Cleanup function
     return () => {

@@ -4,6 +4,7 @@ import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useAudio } from '@/hooks/useAudio';
 import { generateNoteSet, extractPitchClass } from '@/utils/noteUtils';
+import { playNote as playNoteRaw, isAudioReady as checkAudioReady } from '@/utils/audioPlayer';
 import type { NoteId, PitchClass, FeedbackState, NoteStats } from '@/types';
 
 // Default octave for playing clicked pitch classes
@@ -99,6 +100,39 @@ export function useLessonEngine(): UseLessonEngineReturn {
       clearAllTimers();
     };
   }, [clearAllTimers]);
+
+  // Track previous note to detect when a NEW note appears
+  const prevNoteRef = useRef<NoteId | null>(null);
+
+  // Play the note when a new note is displayed (if audio enabled)
+  useEffect(() => {
+    console.log('[LessonEngine] Note effect triggered, currentNote:', currentNote, 'prevNote:', prevNoteRef.current, 'audioEnabled:', audioEnabled);
+
+    // Only play if note changed to a new value (not null)
+    if (currentNote && currentNote !== prevNoteRef.current && audioEnabled) {
+      console.log('[LessonEngine] New note detected, will try to play:', currentNote);
+      prevNoteRef.current = currentNote;
+
+      // Try to play with retries while audio loads
+      let attempts = 0;
+      const maxAttempts = 10;
+      const tryPlay = () => {
+        const ready = checkAudioReady();
+        console.log('[LessonEngine] tryPlay attempt', attempts, 'audioReady:', ready);
+        if (ready) {
+          playNoteRaw(currentNote);
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(tryPlay, 200);
+        } else {
+          console.log('[LessonEngine] Max attempts reached, audio still not ready');
+        }
+      };
+      setTimeout(tryPlay, 100);
+    } else if (!currentNote) {
+      prevNoteRef.current = null;
+    }
+  }, [currentNote, audioEnabled]);
 
   /**
    * Handle key click - processes answer and triggers feedback sequence.
