@@ -6,6 +6,7 @@ import { PianoKeyboard3D } from './PianoKeyboard3D';
 import { Button } from '@/components/ui';
 import { useLessonEngine } from '@/hooks';
 import { useLessonStore } from '@/stores/lessonStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import type { PitchClass } from '@/types';
 
 interface LessonScreenProps {
@@ -27,6 +28,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   } = useLessonEngine();
 
   const noteSelectionId = useLessonStore((state) => state.noteSelectionId);
+  const showStaffDisplay = useSettingsStore((state) => state.showStaffDisplay);
   const [showTransition, setShowTransition] = useState(false);
   const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
@@ -94,10 +96,12 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       {/* Feedback Overlay - renders behind content via z-index */}
       <FeedbackOverlay feedbackState={feedbackState} />
 
-      {/* Staff Display */}
-      <div className="mb-4">
-        <StaffDisplay noteId={currentNote} />
-      </div>
+      {/* Staff Display - hidden for audio-only mode */}
+      {showStaffDisplay && (
+        <div className="mb-4">
+          <StaffDisplay noteId={currentNote} />
+        </div>
+      )}
 
       {/* 3D Piano Keyboard */}
       <div className="flex items-center justify-center mb-4">

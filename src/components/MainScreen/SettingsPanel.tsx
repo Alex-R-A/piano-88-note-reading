@@ -6,18 +6,22 @@ interface SettingsPanelProps {
   includeSharpsFlats: boolean;
   audioEnabled: boolean;
   showCorrectAnswer: boolean;
+  showStaffDisplay: boolean;
   onIncludeSharpsFlatsChange: (value: boolean) => void;
   onAudioEnabledChange: (value: boolean) => void;
   onShowCorrectAnswerChange: (value: boolean) => void;
+  onShowStaffDisplayChange: (value: boolean) => void;
 }
 
 export function SettingsPanel({
   includeSharpsFlats,
   audioEnabled,
   showCorrectAnswer,
+  showStaffDisplay,
   onIncludeSharpsFlatsChange,
   onAudioEnabledChange,
   onShowCorrectAnswerChange,
+  onShowStaffDisplayChange,
 }: SettingsPanelProps) {
   return (
     <div className="w-full max-w-md p-6 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
@@ -60,6 +64,19 @@ export function SettingsPanel({
             checked={showCorrectAnswer}
             onCheckedChange={onShowCorrectAnswerChange}
             aria-label="Show correct answer after wrong answer"
+          />
+        </div>
+
+        {/* Show Staff Display */}
+        <div className="flex items-center justify-between gap-6">
+          <label htmlFor="showStaff" className="text-gray-700">
+            Show Staff Display
+          </label>
+          <Toggle
+            id="showStaff"
+            checked={showStaffDisplay}
+            onCheckedChange={onShowStaffDisplayChange}
+            aria-label="Show visual staff with note"
           />
         </div>
       </div>
