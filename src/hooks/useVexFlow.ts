@@ -69,8 +69,8 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     // Format with padding to center the note
     new Formatter().joinVoices([voice]).format([voice], 100);
 
-    // Draw the voice with x offset - more space between clef and note
-    voice.draw(context, stave, 100);
+    // Draw the voice with x offset - center note on stave
+    voice.draw(context, stave, 60);
 
     // Cleanup function
     return () => {
