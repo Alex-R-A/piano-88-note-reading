@@ -70,7 +70,7 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     new Formatter().joinVoices([voice]).format([voice], 100);
 
     // Draw the voice with x offset - center note on stave
-    voice.draw(context, stave, 60);
+    voice.draw(context, stave, 35);
 
     // Cleanup function
     return () => {
