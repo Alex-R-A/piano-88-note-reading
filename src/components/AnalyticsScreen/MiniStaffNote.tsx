@@ -20,13 +20,13 @@ export function MiniStaffNote({ noteId }: MiniStaffNoteProps) {
     containerRef.current.innerHTML = '';
 
     const renderer = new Renderer(containerRef.current, Renderer.Backends.SVG);
-    renderer.resize(60, 100);
+    renderer.resize(45, 100);
     const context = renderer.getContext();
     context.scale(0.25, 0.25);
 
     const clef = getClefForNote(noteId);
-    // Position stave centered, short width for single note
-    const stave = new Stave(0, 150, 200);
+    // Position stave centered, minimal width for single note
+    const stave = new Stave(0, 150, 140);
     stave.addClef(clef);
     stave.setContext(context).draw();
 
@@ -66,7 +66,7 @@ export function MiniStaffNote({ noteId }: MiniStaffNoteProps) {
   return (
     <div
       ref={containerRef}
-      style={{ width: 60, height: 100 }}
+      style={{ width: 45, height: 100 }}
       aria-label={`Note ${noteId} on staff`}
     />
   );
