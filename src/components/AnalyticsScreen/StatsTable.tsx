@@ -22,15 +22,14 @@ function getAccuracy(stats: NoteStats): number {
 
 /**
  * Get row background color based on accuracy range.
- * Per spec lines 356-359:
- * - 0-40%: red #fee2e2
- * - 41-70%: yellow #fef9c3
- * - 71-100%: green #dcfce7
+ * - 0-40%: red
+ * - 41-70%: yellow
+ * - 71-100%: green
  */
 function getRowColor(accuracy: number): string {
-  if (accuracy <= 40) return '#fee2e2';
-  if (accuracy <= 70) return '#fef9c3';
-  return '#dcfce7';
+  if (accuracy <= 40) return 'bg-red-50';
+  if (accuracy <= 70) return 'bg-amber-50';
+  return 'bg-emerald-50';
 }
 
 /**
@@ -46,23 +45,23 @@ export function StatsTable({ perNote }: StatsTableProps) {
 
   if (sortedStats.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">No notes were practiced in this session.</div>
+      <div className="text-center text-slate-400 py-8">No notes were practiced in this session.</div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto overflow-hidden rounded-lg border border-gray-200">
+    <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
       <table className="w-full" data-testid="stats-table">
         <thead>
-          <tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
-            <th className="px-4 py-3">Note</th>
-            <th className="px-4 py-3 text-center">Times Shown</th>
-            <th className="px-4 py-3 text-center">Correct</th>
-            <th className="px-4 py-3 text-center">Wrong</th>
-            <th className="px-4 py-3 text-center">Accuracy</th>
+          <tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <th className="px-6 py-4">Note</th>
+            <th className="px-4 py-4 text-center">Shown</th>
+            <th className="px-4 py-4 text-center">Correct</th>
+            <th className="px-4 py-4 text-center">Wrong</th>
+            <th className="px-4 py-4 text-center">Accuracy</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100">
           {sortedStats.map(({ noteId, stats }) => {
             const accuracy = getAccuracy(stats);
             const roundedAccuracy = Math.round(accuracy);
@@ -71,17 +70,16 @@ export function StatsTable({ perNote }: StatsTableProps) {
             return (
               <tr
                 key={noteId}
-                style={{ backgroundColor: bgColor }}
-                className="border-t border-gray-200"
+                className={bgColor}
                 data-testid={`stats-row-${noteId}`}
               >
-                <td className="px-4 py-2">
+                <td className="px-6 py-3">
                   <MiniStaffNote noteId={noteId} />
                 </td>
-                <td className="px-4 py-3 text-center text-gray-700">{stats.shown}</td>
-                <td className="px-4 py-3 text-center text-gray-700">{stats.correct}</td>
-                <td className="px-4 py-3 text-center text-gray-700">{stats.shown - stats.correct}</td>
-                <td className="px-4 py-3 text-center text-gray-700">{roundedAccuracy}%</td>
+                <td className="px-4 py-3 text-center text-slate-600 font-medium">{stats.shown}</td>
+                <td className="px-4 py-3 text-center text-emerald-600 font-medium">{stats.correct}</td>
+                <td className="px-4 py-3 text-center text-red-500 font-medium">{stats.shown - stats.correct}</td>
+                <td className="px-4 py-3 text-center text-slate-700 font-semibold">{roundedAccuracy}%</td>
               </tr>
             );
           })}
