@@ -24,13 +24,13 @@ export function SettingsPanel({
   onShowStaffDisplayChange,
 }: SettingsPanelProps) {
   return (
-    <div className="w-full max-w-md p-6 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">Settings</h2>
+    <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-md border border-slate-200">
+      <h2 className="text-base font-medium text-slate-600 mb-5 text-center uppercase tracking-wide">Settings</h2>
 
       <div className="space-y-4">
         {/* Include Sharps & Flats */}
         <div className="flex items-center justify-between gap-6">
-          <label htmlFor="sharpsFlats" className="text-gray-700">
+          <label htmlFor="sharpsFlats" className="text-slate-700">
             Include Sharps & Flats
           </label>
           <Toggle
@@ -43,7 +43,7 @@ export function SettingsPanel({
 
         {/* Enable Audio */}
         <div className="flex items-center justify-between gap-6">
-          <label htmlFor="audio" className="text-gray-700">
+          <label htmlFor="audio" className="text-slate-700">
             Enable Audio
           </label>
           <Toggle
@@ -56,7 +56,7 @@ export function SettingsPanel({
 
         {/* Show Correct Answer */}
         <div className="flex items-center justify-between gap-6">
-          <label htmlFor="showAnswer" className="text-gray-700">
+          <label htmlFor="showAnswer" className="text-slate-700">
             Show Correct Answer
           </label>
           <Toggle
@@ -69,7 +69,7 @@ export function SettingsPanel({
 
         {/* Show Staff Display */}
         <div className="flex items-center justify-between gap-6">
-          <label htmlFor="showStaff" className="text-gray-700">
+          <label htmlFor="showStaff" className="text-slate-700">
             Show Staff Display
           </label>
           <Toggle

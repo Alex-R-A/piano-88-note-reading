@@ -71,24 +71,20 @@ export function OctaveBox({ octave, checked, onToggle }: OctaveBoxProps) {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Octave visualization box */}
-      <div className="p-2 border border-gray-300 rounded bg-gray-100">
-        <div className="text-xs text-center text-gray-600 mb-1">Oct {octave}</div>
-        {renderKeys()}
-        <div className="text-[10px] text-center text-gray-500 mt-1">{label}</div>
-      </div>
-
-      {/* Checkbox below octave box */}
-      <label className="flex items-center mt-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onToggle}
-          className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-          aria-label={`Select octave ${octave}`}
-        />
-      </label>
-    </div>
+    <button
+      onClick={onToggle}
+      className={`flex flex-col items-center p-3 rounded-lg transition-all cursor-pointer ${
+        checked
+          ? 'bg-emerald-50 border-2 border-emerald-400 shadow-md'
+          : 'bg-white border-2 border-slate-200 hover:border-slate-300 hover:shadow-sm'
+      }`}
+      aria-label={`Select octave ${octave}`}
+      aria-pressed={checked}
+    >
+      {/* Octave visualization */}
+      <div className="text-xs font-medium text-slate-600 mb-1">Oct {octave}</div>
+      {renderKeys()}
+      <div className="text-[10px] text-slate-400 mt-1">{label}</div>
+    </button>
   );
 }

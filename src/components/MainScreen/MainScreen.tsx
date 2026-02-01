@@ -29,17 +29,21 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
   const canStart = isStartEnabled() && !webGLDisabled;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col items-center py-12 px-4">
       {/* Header */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Piano 88 Key Visual and Audio Note Learning</h1>
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold text-slate-800 mb-2">Piano 88</h1>
+        <p className="text-lg text-slate-500">Visual and Audio Note Learning</p>
+      </div>
 
       {/* Piano visualization with octave selection */}
-      <div className="mb-8">
+      <div className="mb-10">
+        <p className="text-sm text-slate-500 text-center mb-3">Select octaves to practice</p>
         <PianoOverview selectedOctaves={selectedOctaves} onToggleOctave={toggleOctave} />
       </div>
 
       {/* Settings panel */}
-      <div className="mb-8">
+      <div className="mb-10">
         <SettingsPanel
           includeSharpsFlats={includeSharpsFlats}
           audioEnabled={audioEnabled}
@@ -53,13 +57,18 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
       </div>
 
       {/* Start button */}
-      <Button onClick={onStartLesson} disabled={!canStart} variant="primary" className="bg-green-500 hover:bg-green-600 focus:ring-green-500">
+      <Button
+        onClick={onStartLesson}
+        disabled={!canStart}
+        variant="primary"
+        className="px-10 py-4 text-lg font-semibold bg-emerald-500 hover:bg-emerald-600 focus:ring-emerald-500 shadow-lg hover:shadow-xl transition-shadow"
+      >
         Start Lesson
       </Button>
 
       {/* Helper text when start is disabled */}
       {!canStart && !webGLDisabled && (
-        <p className="mt-4 text-sm text-gray-500">Select at least one octave to start</p>
+        <p className="mt-4 text-sm text-slate-400">Select at least one octave to start</p>
       )}
       {webGLDisabled && (
         <p className="mt-4 text-sm text-red-500">
