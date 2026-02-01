@@ -28,7 +28,7 @@ export function StaffDisplay({ noteId }: StaffDisplayProps) {
       <div
         ref={containerRef}
         className="bg-white"
-        style={{ width: 1200, height: 660 }}
+        style={{ width: 500, height: 660 }}
         aria-label={noteId ? `Musical staff showing note ${noteId}` : 'Empty musical staff'}
       />
     </div>
