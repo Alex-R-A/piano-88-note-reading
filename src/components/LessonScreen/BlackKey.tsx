@@ -1,5 +1,5 @@
 // components/LessonScreen/BlackKey.tsx
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import { createBlackKeyGeometry } from '@/utils/keyGeometry';
 import type { PitchClass } from '@/types';
@@ -11,9 +11,10 @@ interface BlackKeyProps {
   isHighlighted: boolean;
 }
 
-const BLACK_KEY_COLOR = '#1a1a1a';
-const BLACK_KEY_HOVER_COLOR = '#2a2a2a';
+const BLACK_KEY_COLOR = '#2d2d2d';
+const BLACK_KEY_HOVER_COLOR = '#575757';
 const HIGHLIGHTED_COLOR = '#3b82f6';
+const HOVER_DELAY_MS = 100;
 
 export function BlackKey({
   pitchClass: _pitchClass,
@@ -22,6 +23,7 @@ export function BlackKey({
   isHighlighted,
 }: BlackKeyProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<number | null>(null);
 
   const geometry = useMemo(() => createBlackKeyGeometry(), []);
 
@@ -37,10 +39,16 @@ export function BlackKey({
       position={position}
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
-        setIsHovered(true);
+        hoverTimeoutRef.current = window.setTimeout(() => {
+          setIsHovered(true);
+        }, HOVER_DELAY_MS);
       }}
       onPointerOut={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+          hoverTimeoutRef.current = null;
+        }
         setIsHovered(false);
       }}
       onClick={(e: ThreeEvent<MouseEvent>) => {

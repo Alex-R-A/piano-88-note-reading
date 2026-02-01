@@ -115,8 +115,8 @@ export function PianoKeyboard3D({
             position: [0, 9, 18],
             fov: 14,
           }}
-          gl={{ antialias: true }}
-          scene={{ background: new THREE.Color('#d1d5db') }}
+          gl={{ antialias: true, alpha: true }}
+          scene={{ background: null }}
           onCreated={({ camera }) => {
             camera.lookAt(0, 0, 0);
           }}

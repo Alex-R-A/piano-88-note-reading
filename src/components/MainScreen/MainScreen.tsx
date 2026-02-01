@@ -27,7 +27,7 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
   const canStart = isStartEnabled() && !webGLDisabled;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4">
       {/* Header */}
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Piano Note Learning</h1>
 

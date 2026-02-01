@@ -1,5 +1,5 @@
 // components/LessonScreen/WhiteKey.tsx
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import { createWhiteKeyGeometry } from '@/utils/keyGeometry';
 import type { NoteLetter } from '@/types';
@@ -15,6 +15,7 @@ interface WhiteKeyProps {
 const WHITE_KEY_COLOR = '#f5f5f0';
 const WHITE_KEY_HOVER_COLOR = '#ffffff';
 const HIGHLIGHTED_COLOR = '#3b82f6';
+const HOVER_DELAY_MS = 100;
 
 export function WhiteKey({
   letter: _letter,
@@ -23,6 +24,7 @@ export function WhiteKey({
   isHighlighted,
 }: WhiteKeyProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<number | null>(null);
 
   const geometry = useMemo(() => createWhiteKeyGeometry(), []);
 
@@ -38,10 +40,16 @@ export function WhiteKey({
       position={position}
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
-        setIsHovered(true);
+        hoverTimeoutRef.current = window.setTimeout(() => {
+          setIsHovered(true);
+        }, HOVER_DELAY_MS);
       }}
       onPointerOut={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+          hoverTimeoutRef.current = null;
+        }
         setIsHovered(false);
       }}
       onClick={(e: ThreeEvent<MouseEvent>) => {

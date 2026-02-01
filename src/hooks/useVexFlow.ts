@@ -28,13 +28,13 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     const renderer = new Renderer(containerRef.current, Renderer.Backends.SVG);
     rendererRef.current = renderer;
 
-    // Size the renderer (1200x450 - 3x size)
-    renderer.resize(1200, 450);
+    // Size the renderer - tall enough for extreme leger lines
+    renderer.resize(1200, 660);
     const context = renderer.getContext();
     context.scale(3, 3); // Scale everything 3x
 
-    // Create stave with clef - centered vertically to allow room for leger lines
-    const stave = new Stave(10, 25, 380);
+    // Create stave with clef - balanced position for high and low leger lines
+    const stave = new Stave(10, 60, 380);
     stave.addClef(clef);
     stave.setContext(context).draw();
 

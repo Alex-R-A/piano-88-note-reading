@@ -19,7 +19,7 @@ export function AnalyticsScreen({ onBackToMain }: AnalyticsScreenProps) {
   const { overall, perNote } = getSessionStats();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4">
       <AccuracyHeader overallAccuracy={overall} />
 
       <StatsTable perNote={perNote} />

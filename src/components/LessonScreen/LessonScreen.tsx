@@ -65,17 +65,17 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     feedbackState === 'showAnswer' ? correctPitchClass : null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4 relative">
+    <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4 relative">
       {/* Feedback Overlay - renders behind content via z-index */}
       <FeedbackOverlay feedbackState={feedbackState} />
 
       {/* Staff Display */}
-      <div className="mb-8">
+      <div className="mb-4">
         <StaffDisplay noteId={currentNote} />
       </div>
 
       {/* 3D Piano Keyboard */}
-      <div className="flex-1 flex items-center justify-center mb-8">
+      <div className="flex items-center justify-center mb-4">
         <PianoKeyboard3D
           onKeyClick={onKeyClick}
           highlightedKey={highlightedKey}
@@ -86,7 +86,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       <Button
         variant="secondary"
         onClick={handleStopLesson}
-        className="px-6 py-3"
+        className="px-6 py-3 hover:bg-red-500 hover:text-white hover:border-red-500"
       >
         Stop Lesson
       </Button>

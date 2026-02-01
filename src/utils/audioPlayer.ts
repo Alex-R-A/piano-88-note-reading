@@ -126,9 +126,8 @@ export function playNote(noteId: NoteId): void {
   console.log('[Audio] Playing note:', smplrNote);
 
   try {
-    // Start the note with default velocity
-    // The note will ring out naturally (piano sound decays)
-    piano.start({ note: smplrNote });
+    // Start the note with short duration (0.5 seconds)
+    piano.start({ note: smplrNote, duration: 0.5 });
     console.log('[Audio] Note started successfully');
   } catch (error) {
     console.error('[Audio] Failed to play note:', noteId, error);

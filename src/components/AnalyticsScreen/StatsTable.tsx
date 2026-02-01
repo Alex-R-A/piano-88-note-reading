@@ -1,6 +1,7 @@
 // components/AnalyticsScreen/StatsTable.tsx
 
 import type { NoteId, NoteStats } from '@/types';
+import { MiniStaffNote } from './MiniStaffNote';
 
 interface NoteStatEntry {
   noteId: NoteId;
@@ -73,7 +74,9 @@ export function StatsTable({ perNote }: StatsTableProps) {
                 className="border-t border-gray-200"
                 data-testid={`stats-row-${noteId}`}
               >
-                <td className="px-4 py-3 font-medium text-gray-900">{noteId}</td>
+                <td className="px-4 py-2">
+                  <MiniStaffNote noteId={noteId} />
+                </td>
                 <td className="px-4 py-3 text-center text-gray-700">{stats.shown}</td>
                 <td className="px-4 py-3 text-center text-gray-700">{stats.correct}</td>
                 <td className="px-4 py-3">

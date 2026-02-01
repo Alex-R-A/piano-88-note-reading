@@ -3,13 +3,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useAudio } from '@/hooks/useAudio';
-import { generateNoteSet, extractPitchClass } from '@/utils/noteUtils';
+import { generateNoteSet, extractPitchClass, parseNote } from '@/utils/noteUtils';
 import { playNote as playNoteRaw, isAudioReady as checkAudioReady } from '@/utils/audioPlayer';
 import type { NoteId, PitchClass, FeedbackState, NoteStats } from '@/types';
-
-// Default octave for playing clicked pitch classes
-// (keyboard shows generic octave, so we use middle C octave for audio feedback)
-const AUDIO_FEEDBACK_OCTAVE = 4;
 
 // Timing constants (in milliseconds) per spec lines 285-298
 const FEEDBACK_FLASH_DURATION = 800;
@@ -158,14 +154,15 @@ export function useLessonEngine(): UseLessonEngineReturn {
       // Play audio feedback if enabled
       // Per spec lines 285-299:
       // - Correct answer: play the displayed note
-      // - Incorrect answer: play the clicked note (so user hears their mistake)
+      // - Incorrect answer: play the clicked note at the same octave as displayed note
       if (audioEnabled && isAudioReady) {
         if (isCorrect) {
           // Play the displayed note
           playNote(currentNote);
         } else {
-          // Play the clicked note (user's mistake) at default octave
-          const clickedNoteId = `${pitchClass}${AUDIO_FEEDBACK_OCTAVE}` as NoteId;
+          // Play the clicked note at the same octave as the displayed note
+          const displayedOctave = parseNote(currentNote).octave;
+          const clickedNoteId = `${pitchClass}${displayedOctave}` as NoteId;
           playNote(clickedNoteId);
         }
       }
