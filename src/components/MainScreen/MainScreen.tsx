@@ -29,7 +29,7 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4">
       {/* Header */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Piano Note Learning</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Piano 88 Keys Note Learning</h1>
 
       {/* Piano visualization with octave selection */}
       <div className="mb-8">
@@ -49,7 +49,7 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
       </div>
 
       {/* Start button */}
-      <Button onClick={onStartLesson} disabled={!canStart} variant="primary">
+      <Button onClick={onStartLesson} disabled={!canStart} variant="primary" className="bg-green-500 hover:bg-green-600 focus:ring-green-500">
         Start Lesson
       </Button>
 

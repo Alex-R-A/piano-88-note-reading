@@ -20,12 +20,12 @@ export function SettingsPanel({
   onShowCorrectAnswerChange,
 }: SettingsPanelProps) {
   return (
-    <div className="w-full max-w-md p-6 border border-gray-300 rounded-lg bg-white shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Settings</h2>
+    <div className="w-full max-w-md p-6 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">Settings</h2>
 
       <div className="space-y-4">
         {/* Include Sharps & Flats */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-6">
           <label htmlFor="sharpsFlats" className="text-gray-700">
             Include Sharps & Flats
           </label>
@@ -38,7 +38,7 @@ export function SettingsPanel({
         </div>
 
         {/* Enable Audio */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-6">
           <label htmlFor="audio" className="text-gray-700">
             Enable Audio
           </label>
@@ -51,7 +51,7 @@ export function SettingsPanel({
         </div>
 
         {/* Show Correct Answer */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-6">
           <label htmlFor="showAnswer" className="text-gray-700">
             Show Correct Answer
           </label>

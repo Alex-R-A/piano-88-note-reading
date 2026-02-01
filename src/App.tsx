@@ -66,33 +66,11 @@ function WebGLWarning() {
   );
 }
 
-/**
- * Audio blocked notice component.
- * Per spec line 1002: show "Click to enable sound" notice.
- */
-function AudioBlockedNotice({ onDismiss }: { onDismiss: () => void }) {
-  return (
-    <div
-      className="fixed bottom-4 right-4 bg-yellow-100 border border-yellow-300 rounded-lg p-4 shadow-lg cursor-pointer z-40 max-w-xs"
-      onClick={onDismiss}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onDismiss()}
-    >
-      <p className="text-sm text-yellow-800">
-        Click anywhere to enable sound
-      </p>
-    </div>
-  );
-}
-
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showViewportWarning, setShowViewportWarning] = useState(false);
   const [webGLSupported, setWebGLSupported] = useState(true);
-  const [showAudioNotice, setShowAudioNotice] = useState(false);
-  const [audioContextResumed, setAudioContextResumed] = useState(false);
 
   // Store access
   const startLesson = useLessonStore((state) => state.startLesson);
@@ -114,34 +92,6 @@ function App() {
     window.addEventListener('resize', checkViewport);
     return () => window.removeEventListener('resize', checkViewport);
   }, []);
-
-  // Show audio notice if audio is enabled but not yet user-activated
-  useEffect(() => {
-    if (audioEnabled && !audioContextResumed) {
-      setShowAudioNotice(true);
-    } else {
-      setShowAudioNotice(false);
-    }
-  }, [audioEnabled, audioContextResumed]);
-
-  // Handle user interaction to resume AudioContext
-  useEffect(() => {
-    if (audioContextResumed) return;
-
-    function handleUserInteraction() {
-      setAudioContextResumed(true);
-      setShowAudioNotice(false);
-    }
-
-    // Listen for first user interaction
-    document.addEventListener('click', handleUserInteraction, { once: true });
-    document.addEventListener('keydown', handleUserInteraction, { once: true });
-
-    return () => {
-      document.removeEventListener('click', handleUserInteraction);
-      document.removeEventListener('keydown', handleUserInteraction);
-    };
-  }, [audioContextResumed]);
 
   /**
    * Navigate to a new screen with transition animation.
@@ -230,11 +180,6 @@ function App() {
 
       {/* WebGL warning overlay */}
       {!webGLSupported && <WebGLWarning />}
-
-      {/* Audio blocked notice */}
-      {showAudioNotice && (
-        <AudioBlockedNotice onDismiss={() => setShowAudioNotice(false)} />
-      )}
 
       {/* Main content with screen transitions */}
       <div

@@ -50,6 +50,7 @@ export function useLessonEngine(): UseLessonEngineReturn {
   // Store access
   const {
     currentNote,
+    noteSelectionId,
     feedbackState,
     isActive,
     startLesson: storeStartLesson,
@@ -97,17 +98,17 @@ export function useLessonEngine(): UseLessonEngineReturn {
     };
   }, [clearAllTimers]);
 
-  // Track previous note to detect when a NEW note appears
-  const prevNoteRef = useRef<NoteId | null>(null);
+  // Track previous selection ID to detect when a NEW note selection happens
+  const prevSelectionIdRef = useRef<number>(0);
 
-  // Play the note when a new note is displayed (if audio enabled)
+  // Play the note when a new note is selected (if audio enabled)
   useEffect(() => {
-    console.log('[LessonEngine] Note effect triggered, currentNote:', currentNote, 'prevNote:', prevNoteRef.current, 'audioEnabled:', audioEnabled);
+    console.log('[LessonEngine] Note effect triggered, currentNote:', currentNote, 'selectionId:', noteSelectionId, 'prevSelectionId:', prevSelectionIdRef.current, 'audioEnabled:', audioEnabled);
 
-    // Only play if note changed to a new value (not null)
-    if (currentNote && currentNote !== prevNoteRef.current && audioEnabled) {
-      console.log('[LessonEngine] New note detected, will try to play:', currentNote);
-      prevNoteRef.current = currentNote;
+    // Only play if a new selection happened (selectionId changed)
+    if (currentNote && noteSelectionId !== prevSelectionIdRef.current && audioEnabled) {
+      console.log('[LessonEngine] New note selection detected, will try to play:', currentNote);
+      prevSelectionIdRef.current = noteSelectionId;
 
       // Try to play with retries while audio loads
       let attempts = 0;
@@ -125,10 +126,8 @@ export function useLessonEngine(): UseLessonEngineReturn {
         }
       };
       setTimeout(tryPlay, 100);
-    } else if (!currentNote) {
-      prevNoteRef.current = null;
     }
-  }, [currentNote, audioEnabled]);
+  }, [currentNote, noteSelectionId, audioEnabled]);
 
   /**
    * Handle key click - processes answer and triggers feedback sequence.

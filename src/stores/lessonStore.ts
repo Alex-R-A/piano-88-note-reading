@@ -13,6 +13,7 @@ interface LessonStore {
   errorWeights: Map<NoteId, number>;
   recentBuffer: NoteId[];
   currentNote: NoteId | null;
+  noteSelectionId: number; // Increments each time a note is selected
   stats: Map<NoteId, NoteStats>;
   feedbackState: FeedbackState;
 
@@ -88,6 +89,7 @@ export const useLessonStore = create<LessonStore>((set, get) => ({
   errorWeights: new Map<NoteId, number>(),
   recentBuffer: [],
   currentNote: null,
+  noteSelectionId: 0,
   stats: new Map<NoteId, NoteStats>(),
   feedbackState: 'none',
 
@@ -99,6 +101,7 @@ export const useLessonStore = create<LessonStore>((set, get) => ({
       errorWeights: new Map(),
       recentBuffer: [],
       currentNote: null,
+      noteSelectionId: 0,
       stats: new Map(),
       feedbackState: 'none',
     });
@@ -118,7 +121,11 @@ export const useLessonStore = create<LessonStore>((set, get) => ({
       recentBuffer: state.recentBuffer,
     });
 
-    set({ currentNote: nextNote, feedbackState: 'none' });
+    set((state) => ({
+      currentNote: nextNote,
+      feedbackState: 'none',
+      noteSelectionId: state.noteSelectionId + 1,
+    }));
   },
 
   processAnswer: (clickedPitchClass: PitchClass): boolean => {

@@ -1,10 +1,11 @@
 // components/LessonScreen/LessonScreen.tsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FeedbackOverlay } from './FeedbackOverlay';
 import { StaffDisplay } from './StaffDisplay';
 import { PianoKeyboard3D } from './PianoKeyboard3D';
 import { Button } from '@/components/ui';
 import { useLessonEngine } from '@/hooks';
+import { useLessonStore } from '@/stores/lessonStore';
 import type { PitchClass } from '@/types';
 
 interface LessonScreenProps {
@@ -23,10 +24,22 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     feedbackState,
     correctPitchClass,
     initializeAudio,
-    isAudioReady,
   } = useLessonEngine();
 
+  const noteSelectionId = useLessonStore((state) => state.noteSelectionId);
+  const [showTransition, setShowTransition] = useState(false);
+  const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
+
+  // Trigger page transition when a new note is selected
+  useEffect(() => {
+    if (noteSelectionId !== prevSelectionIdRef.current && noteSelectionId > 0) {
+      prevSelectionIdRef.current = noteSelectionId;
+      setShowTransition(true);
+      const timer = setTimeout(() => setShowTransition(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [noteSelectionId]);
 
   // Initialize audio immediately when lesson screen mounts
   // Browser requires user gesture, so we also listen for first click as fallback
@@ -66,6 +79,13 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4 relative">
+      {/* Note transition overlay - white flash that fades out */}
+      <div
+        className={`fixed inset-0 bg-white pointer-events-none z-50 transition-opacity duration-300 ${
+          showTransition ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+
       {/* Feedback Overlay - renders behind content via z-index */}
       <FeedbackOverlay feedbackState={feedbackState} />
 
