@@ -1,5 +1,6 @@
 // components/LessonScreen/LessonScreen.tsx
 import { useEffect } from 'react';
+import { FeedbackOverlay } from './FeedbackOverlay';
 import { StaffDisplay } from './StaffDisplay';
 import { PianoKeyboard3D } from './PianoKeyboard3D';
 import { Button } from '@/components/ui';
@@ -41,7 +42,10 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     feedbackState === 'showAnswer' ? correctPitchClass : null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4 relative">
+      {/* Feedback Overlay - renders behind content via z-index */}
+      <FeedbackOverlay feedbackState={feedbackState} />
+
       {/* Staff Display */}
       <div className="mb-8">
         <StaffDisplay noteId={currentNote} />
