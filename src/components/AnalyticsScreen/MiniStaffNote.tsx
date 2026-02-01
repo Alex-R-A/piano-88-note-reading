@@ -26,8 +26,8 @@ export function MiniStaffNote({ noteId }: MiniStaffNoteProps) {
     context.scale(0.4, 0.4);
 
     const clef = getClefForNote(noteId);
-    // Position stave near top to allow room below for low leger lines
-    const stave = new Stave(0, 0, 450);
+    // Position stave in center of canvas (scaled coords: 400/0.4 = 1000 height, center around 400)
+    const stave = new Stave(0, 350, 450);
     stave.addClef(clef);
     stave.setContext(context).draw();
 
@@ -67,7 +67,7 @@ export function MiniStaffNote({ noteId }: MiniStaffNoteProps) {
   return (
     <div
       ref={containerRef}
-      style={{ width: 200, height: 400, marginTop: -100 }}
+      style={{ width: 200, height: 400 }}
       aria-label={`Note ${noteId} on staff`}
     />
   );
