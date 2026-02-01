@@ -32,12 +32,14 @@ interface LessonStore {
 /**
  * Select the next note using weighted random selection with anti-clustering.
  * Implements spec lines 449-477.
+ * Never selects the same note twice in a row unless it's a single-note set.
  */
 function selectNextNoteFromState(state: {
   fullNoteSet: NoteId[];
   remainingNotes: Set<NoteId>;
   errorWeights: Map<NoteId, number>;
   recentBuffer: NoteId[];
+  currentNote: NoteId | null;
 }): NoteId {
   // 1. Build candidate pool
   const candidates: NoteId[] = [];
@@ -56,19 +58,16 @@ function selectNextNoteFromState(state: {
   }
 
   // 2. Filter out recently shown notes (anti-clustering)
+  // Also explicitly exclude the current note to prevent back-to-back repeats
   let filtered = candidates.filter(
-    (note) => !state.recentBuffer.includes(note)
+    (note) => !state.recentBuffer.includes(note) && note !== state.currentNote
   );
 
   // 3. Handle edge case: all candidates filtered out
   // This can happen if note set is very small (< BUFFER_SIZE)
   if (filtered.length === 0) {
-    // Fall back to any note not shown most recently
-    const mostRecent =
-      state.recentBuffer.length > 0
-        ? state.recentBuffer[state.recentBuffer.length - 1]
-        : null;
-    filtered = state.fullNoteSet.filter((note) => note !== mostRecent);
+    // Fall back to any note except the current one
+    filtered = state.fullNoteSet.filter((note) => note !== state.currentNote);
 
     // Ultimate fallback: if still empty (single-note set), use the only note
     if (filtered.length === 0) {
@@ -119,6 +118,7 @@ export const useLessonStore = create<LessonStore>((set, get) => ({
       remainingNotes: state.remainingNotes,
       errorWeights: state.errorWeights,
       recentBuffer: state.recentBuffer,
+      currentNote: state.currentNote,
     });
 
     set((state) => ({
