@@ -62,15 +62,17 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
       staveNote.addModifier(new Accidental('b'));
     }
 
-    // Create voice and format - center the note by using larger width
+    // Shift note to the right to center it on stave
+    staveNote.setXShift(40);
+
+    // Create voice and format
     const voice = new Voice({ numBeats: 4, beatValue: 4 });
     voice.addTickable(staveNote);
 
-    // Format with padding to center the note
-    new Formatter().joinVoices([voice]).format([voice], 100);
+    new Formatter().joinVoices([voice]).format([voice], 50);
 
-    // Draw the voice with x offset - center note on stave
-    voice.draw(context, stave, 35);
+    // Draw the voice
+    voice.draw(context, stave);
 
     // Cleanup function
     return () => {
