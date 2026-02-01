@@ -1,5 +1,4 @@
 // components/LessonScreen/LessonScreen.tsx
-import { useEffect } from 'react';
 import { FeedbackOverlay } from './FeedbackOverlay';
 import { StaffDisplay } from './StaffDisplay';
 import { PianoKeyboard3D } from './PianoKeyboard3D';
@@ -13,27 +12,18 @@ interface LessonScreenProps {
 /**
  * Main lesson screen container.
  * Displays staff notation at top, 3D keyboard in middle, stop button at bottom.
+ * Note: Lesson is started by App.tsx before navigation, so no startLesson call needed here.
  */
 export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   const {
     currentNote,
-    isActive,
-    startLesson,
-    endLesson,
     handleKeyClick,
     feedbackState,
     correctPitchClass,
   } = useLessonEngine();
 
-  // Start lesson when component mounts
-  useEffect(() => {
-    if (!isActive) {
-      startLesson();
-    }
-  }, [isActive, startLesson]);
-
+  // Stop button handler - parent handles lesson state reset
   const handleStopLesson = () => {
-    endLesson();
     onEndLesson();
   };
 

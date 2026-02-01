@@ -7,9 +7,10 @@ import { Button } from '../ui/Button';
 
 interface MainScreenProps {
   onStartLesson: () => void;
+  webGLDisabled?: boolean;
 }
 
-export function MainScreen({ onStartLesson }: MainScreenProps) {
+export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenProps) {
   const {
     selectedOctaves,
     includeSharpsFlats,
@@ -22,7 +23,8 @@ export function MainScreen({ onStartLesson }: MainScreenProps) {
     isStartEnabled,
   } = useSettingsStore();
 
-  const canStart = isStartEnabled();
+  // Disable start if no octaves selected OR if WebGL is not supported
+  const canStart = isStartEnabled() && !webGLDisabled;
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-8 px-4">
@@ -51,9 +53,14 @@ export function MainScreen({ onStartLesson }: MainScreenProps) {
         Start Lesson
       </Button>
 
-      {/* Helper text when no octaves selected */}
-      {!canStart && (
+      {/* Helper text when start is disabled */}
+      {!canStart && !webGLDisabled && (
         <p className="mt-4 text-sm text-gray-500">Select at least one octave to start</p>
+      )}
+      {webGLDisabled && (
+        <p className="mt-4 text-sm text-red-500">
+          3D graphics not supported - lessons unavailable
+        </p>
       )}
     </div>
   );

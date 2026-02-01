@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { WhiteKey } from './WhiteKey';
 import { BlackKey } from './BlackKey';
+import { WebGLErrorBoundary } from '@/components/ui';
 import {
   WHITE_KEY_WIDTH,
   WHITE_KEY_HEIGHT,
@@ -124,21 +125,23 @@ export function PianoKeyboard3D({
       className="bg-gray-800 rounded-lg overflow-hidden"
       style={{ width: 600, height: 250 }}
     >
-      <Canvas
-        camera={{
-          position: [0, 5, 8],
-          fov: 50,
-        }}
-        gl={{ antialias: true }}
-        onCreated={({ camera }) => {
-          camera.lookAt(0, 0, 0);
-        }}
-      >
-        <KeyboardScene
-          onKeyClick={onKeyClick}
-          highlightedKey={highlightedKey}
-        />
-      </Canvas>
+      <WebGLErrorBoundary>
+        <Canvas
+          camera={{
+            position: [0, 5, 8],
+            fov: 50,
+          }}
+          gl={{ antialias: true }}
+          onCreated={({ camera }) => {
+            camera.lookAt(0, 0, 0);
+          }}
+        >
+          <KeyboardScene
+            onKeyClick={onKeyClick}
+            highlightedKey={highlightedKey}
+          />
+        </Canvas>
+      </WebGLErrorBoundary>
     </div>
   );
 }

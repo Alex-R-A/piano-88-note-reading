@@ -203,6 +203,36 @@ describe('MainScreen', () => {
     });
   });
 
+  describe('WebGL disabled', () => {
+    it('should disable start button when webGLDisabled is true', () => {
+      render(<MainScreen onStartLesson={() => {}} webGLDisabled={true} />);
+
+      const startButton = screen.getByRole('button', { name: /start lesson/i });
+      expect(startButton).toBeDisabled();
+    });
+
+    it('should show WebGL error message when webGLDisabled is true', () => {
+      render(<MainScreen onStartLesson={() => {}} webGLDisabled={true} />);
+
+      expect(screen.getByText(/3D graphics not supported/i)).toBeInTheDocument();
+    });
+
+    it('should not show octave selection message when webGLDisabled is true', () => {
+      useSettingsStore.setState({
+        selectedOctaves: new Set(),
+        includeSharpsFlats: false,
+        audioEnabled: true,
+        showCorrectAnswer: false,
+      });
+
+      render(<MainScreen onStartLesson={() => {}} webGLDisabled={true} />);
+
+      // Should show WebGL error, not octave selection error
+      expect(screen.getByText(/3D graphics not supported/i)).toBeInTheDocument();
+      expect(screen.queryByText(/select at least one octave to start/i)).not.toBeInTheDocument();
+    });
+  });
+
   describe('Store integration', () => {
     it('should persist octave selection in store', () => {
       render(<MainScreen onStartLesson={() => {}} />);

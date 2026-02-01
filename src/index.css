@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Screen transition animations */
+.screen-transition {
+  transition: opacity 150ms ease-in-out;
+}
+
+.screen-enter {
+  opacity: 1;
+}
+
+.screen-exit {
+  opacity: 0;
+}
+
+/* Ensure smooth hardware-accelerated transitions */
+.screen-transition {
+  will-change: opacity;
+}
