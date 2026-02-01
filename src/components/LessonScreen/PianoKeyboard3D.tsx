@@ -114,7 +114,10 @@ function KeyboardScene({
 /**
  * 3D Piano Keyboard component with React Three Fiber.
  * Displays a single octave (7 white keys, 5 black keys).
- * Camera positioned per spec: position(0, 5, 8), lookAt(0, 0, 0), fov 50.
+ * Camera positioned for player perspective: slightly above, looking down at keys from the front.
+ * - Camera at negative Z (in front of keyboard) looking toward positive Z (back of keys)
+ * - Elevated Y to look down at the keys
+ * - Looking at the center of the keyboard
  */
 export function PianoKeyboard3D({
   onKeyClick,
@@ -128,12 +131,15 @@ export function PianoKeyboard3D({
       <WebGLErrorBoundary>
         <Canvas
           camera={{
-            position: [0, 5, 8],
+            // Player perspective: in front of keyboard (negative Z), above (positive Y)
+            // Looking at the keyboard center which is around Z=2.5 (middle of key length)
+            position: [0, 6, -4],
             fov: 50,
           }}
           gl={{ antialias: true }}
           onCreated={({ camera }) => {
-            camera.lookAt(0, 0, 0);
+            // Look at the center of the keyboard (approximately middle of keys in Z)
+            camera.lookAt(0, 0, 2);
           }}
         >
           <KeyboardScene

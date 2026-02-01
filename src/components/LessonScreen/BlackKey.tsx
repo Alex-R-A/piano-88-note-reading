@@ -5,6 +5,7 @@ import {
   createBlackKeyGeometry,
   BLACK_KEY_HEIGHT,
   BLACK_KEY_LENGTH,
+  WHITE_KEY_LENGTH,
 } from '@/utils/keyGeometry';
 import type { PitchClass } from '@/types';
 
@@ -20,10 +21,9 @@ const BLACK_KEY_COLOR = '#1a1a1a'; // Near-black
 const BLACK_KEY_HOVER_COLOR = '#333333'; // Slightly brighter on hover
 const HIGHLIGHTED_COLOR = '#3b82f6'; // Blue highlight
 
-// Black keys raised above white keys by ~40% of black key length
-// The position.y should be WHITE_KEY_HEIGHT / 2 + BLACK_KEY_HEIGHT / 2
-// But we also need to position the key forward (negative Z) so it sits in the notches
-export const BLACK_KEY_Z_OFFSET = -BLACK_KEY_LENGTH * 0.4;
+// Black keys sit ON TOP of white keys (elevated in Y) and toward the BACK (positive Z)
+// Z offset: positions black key at the back 60% of white key where the notches are
+export const BLACK_KEY_Z_OFFSET = (WHITE_KEY_LENGTH - BLACK_KEY_LENGTH) / 2;
 
 /**
  * 3D black key mesh with hover and highlight states.
@@ -62,9 +62,14 @@ export function BlackKey({
     onClick();
   };
 
-  // Adjust Y position to raise black key above white key
-  // The passed position already includes the base X position,
-  // we add the height offset here for Y
+  // Adjust position for black key placement:
+  // - X: use passed position (centered between white keys)
+  // - Y: black keys sit ON TOP of white keys (their bottom touches white key top surface)
+  //      position[1] is WHITE_KEY_HEIGHT (the Y of white key top surface)
+  //      Black key center should be at: WHITE_KEY_HEIGHT + BLACK_KEY_HEIGHT/2
+  // - Z: black keys are at the BACK of white keys (positive Z direction)
+  //      position[2] is WHITE_KEY_LENGTH/2 (center of white key in Z)
+  //      We offset toward back by BLACK_KEY_Z_OFFSET
   const adjustedPosition: [number, number, number] = [
     position[0],
     position[1] + BLACK_KEY_HEIGHT / 2,
