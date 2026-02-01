@@ -58,7 +58,8 @@ export function StatsTable({ perNote }: StatsTableProps) {
             <th className="px-4 py-3">Note</th>
             <th className="px-4 py-3 text-center">Times Shown</th>
             <th className="px-4 py-3 text-center">Correct</th>
-            <th className="px-4 py-3">Accuracy</th>
+            <th className="px-4 py-3 text-center">Wrong</th>
+            <th className="px-4 py-3 text-center">Accuracy</th>
           </tr>
         </thead>
         <tbody>
@@ -79,6 +80,7 @@ export function StatsTable({ perNote }: StatsTableProps) {
                 </td>
                 <td className="px-4 py-3 text-center text-gray-700">{stats.shown}</td>
                 <td className="px-4 py-3 text-center text-gray-700">{stats.correct}</td>
+                <td className="px-4 py-3 text-center text-gray-700">{stats.shown - stats.correct}</td>
                 <td className="px-4 py-3 text-center text-gray-700">{roundedAccuracy}%</td>
               </tr>
             );
