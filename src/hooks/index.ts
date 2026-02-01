@@ -8,3 +8,5 @@ export {
   TOTAL_INCORRECT_WITH_ANSWER_TIME,
 } from './useLessonEngine';
 export type { UseLessonEngineReturn, LessonEngineStats } from './useLessonEngine';
+
+export { useVexFlow } from './useVexFlow';

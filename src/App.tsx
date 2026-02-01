@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MainScreen } from '@/components/MainScreen';
+import { LessonScreen } from '@/components/LessonScreen';
 import type { Screen } from '@/types';
 
 function App() {
@@ -24,18 +25,7 @@ function App() {
       return <MainScreen onStartLesson={handleStartLesson} />;
 
     case 'lesson':
-      // Placeholder for LessonScreen - will be implemented in Step 5-7
-      return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Lesson Screen (Coming Soon)</h1>
-          <button
-            onClick={handleEndLesson}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Stop Lesson
-          </button>
-        </div>
-      );
+      return <LessonScreen onEndLesson={handleEndLesson} />;
 
     case 'analytics':
       // Placeholder for AnalyticsScreen - will be implemented in Step 9
