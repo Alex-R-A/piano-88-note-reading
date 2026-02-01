@@ -63,7 +63,7 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     }
 
     // Shift note to the right to center it on stave
-    staveNote.setXShift(40);
+    staveNote.setXShift(25);
 
     // Create voice and format
     const voice = new Voice({ numBeats: 4, beatValue: 4 });
