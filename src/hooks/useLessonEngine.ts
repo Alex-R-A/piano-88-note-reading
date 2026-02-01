@@ -2,8 +2,13 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useAudio } from '@/hooks/useAudio';
 import { generateNoteSet, extractPitchClass } from '@/utils/noteUtils';
 import type { NoteId, PitchClass, FeedbackState, NoteStats } from '@/types';
+
+// Default octave for playing clicked pitch classes
+// (keyboard shows generic octave, so we use middle C octave for audio feedback)
+const AUDIO_FEEDBACK_OCTAVE = 4;
 
 // Timing constants (in milliseconds) per spec lines 285-298
 const FEEDBACK_FLASH_DURATION = 800;
@@ -32,6 +37,10 @@ export interface UseLessonEngineReturn {
   startLesson: (noteSet?: NoteId[]) => void;
   endLesson: () => void;
 
+  // Audio
+  initializeAudio: () => Promise<void>;
+  isAudioReady: boolean;
+
   // Stats for analytics
   stats: LessonEngineStats;
 }
@@ -54,8 +63,11 @@ export function useLessonEngine(): UseLessonEngineReturn {
     getSessionStats,
   } = useLessonStore();
 
-  const { showCorrectAnswer, selectedOctaves, includeSharpsFlats } =
+  const { showCorrectAnswer, selectedOctaves, includeSharpsFlats, audioEnabled } =
     useSettingsStore();
+
+  // Audio playback
+  const { playNote, initializeAudio, isReady: isAudioReady } = useAudio();
 
   // Timer refs for cleanup
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,6 +121,21 @@ export function useLessonEngine(): UseLessonEngineReturn {
       // Process the answer (updates store state)
       const isCorrect = processAnswer(pitchClass);
 
+      // Play audio feedback if enabled
+      // Per spec lines 285-299:
+      // - Correct answer: play the displayed note
+      // - Incorrect answer: play the clicked note (so user hears their mistake)
+      if (audioEnabled && isAudioReady) {
+        if (isCorrect) {
+          // Play the displayed note
+          playNote(currentNote);
+        } else {
+          // Play the clicked note (user's mistake) at default octave
+          const clickedNoteId = `${pitchClass}${AUDIO_FEEDBACK_OCTAVE}` as NoteId;
+          playNote(clickedNoteId);
+        }
+      }
+
       // Clear any existing timers
       clearAllTimers();
 
@@ -153,6 +180,9 @@ export function useLessonEngine(): UseLessonEngineReturn {
       setFeedbackState,
       showCorrectAnswer,
       clearAllTimers,
+      audioEnabled,
+      isAudioReady,
+      playNote,
     ]
   );
 
@@ -199,6 +229,8 @@ export function useLessonEngine(): UseLessonEngineReturn {
     handleKeyClick,
     startLesson,
     endLesson,
+    initializeAudio,
+    isAudioReady,
     stats,
   };
 }

@@ -23,6 +23,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      smplr:
+        specifier: ^0.16.4
+        version: 0.16.4
       three:
         specifier: ^0.182.0
         version: 0.182.0
@@ -1780,6 +1783,10 @@ packages:
 
   siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+
+  smplr@0.16.4:
+    resolution: {integrity: sha512-huIW2uSAuHTqjqCf2sqg3q03q/y1D1fhj2fR5jkP/u3cakbB5bMTk1z7SCdN45G5DRakrWwtUPcovsfMpeNr1w==}
+    engines: {node: '>=14.0.0'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -3762,6 +3769,8 @@ snapshots:
       side-channel-weakmap: 1.0.2
 
   siginfo@2.0.0: {}
+
+  smplr@0.16.4: {}
 
   source-map-js@1.2.1: {}
 
