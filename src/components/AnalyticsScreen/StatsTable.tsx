@@ -79,18 +79,7 @@ export function StatsTable({ perNote }: StatsTableProps) {
                 </td>
                 <td className="px-4 py-3 text-center text-gray-700">{stats.shown}</td>
                 <td className="px-4 py-3 text-center text-gray-700">{stats.correct}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-12 text-gray-700">{roundedAccuracy}%</span>
-                    <div className="flex-1 h-4 bg-gray-200 rounded overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 transition-all duration-300"
-                        style={{ width: `${roundedAccuracy}%` }}
-                        data-testid={`accuracy-bar-${noteId}`}
-                      />
-                    </div>
-                  </div>
-                </td>
+                <td className="px-4 py-3 text-center text-gray-700">{roundedAccuracy}%</td>
               </tr>
             );
           })}
