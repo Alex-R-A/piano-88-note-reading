@@ -131,15 +131,15 @@ export function PianoKeyboard3D({
       <WebGLErrorBoundary>
         <Canvas
           camera={{
-            // Player perspective: in front of keyboard (negative Z), above (positive Y)
-            // Looking at the keyboard center which is around Z=2.5 (middle of key length)
-            position: [0, 6, -4],
-            fov: 50,
+            // Player perspective: low angle in front of keyboard, near key level
+            // This emphasizes the front faces of the keys like a real player view
+            position: [0, 1.5, -6],
+            fov: 45,
           }}
           gl={{ antialias: true }}
           onCreated={({ camera }) => {
-            // Look at the center of the keyboard (approximately middle of keys in Z)
-            camera.lookAt(0, 0, 2);
+            // Look at slightly above the keyboard center
+            camera.lookAt(0, 0.5, 1);
           }}
         >
           <KeyboardScene
