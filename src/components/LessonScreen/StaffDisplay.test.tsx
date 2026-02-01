@@ -33,11 +33,13 @@ vi.mock('vexflow', () => {
 
   const MockAccidental = vi.fn().mockImplementation(() => ({}));
 
-  const MockRenderer = vi.fn().mockImplementation(() => ({
-    resize: vi.fn(),
-    getContext: vi.fn().mockReturnValue(mockContext),
-  }));
-  MockRenderer.Backends = { SVG: 2, CANVAS: 1 };
+  const MockRenderer = Object.assign(
+    vi.fn().mockImplementation(() => ({
+      resize: vi.fn(),
+      getContext: vi.fn().mockReturnValue(mockContext),
+    })),
+    { Backends: { SVG: 2, CANVAS: 1 } }
+  );
 
   return {
     Renderer: MockRenderer,
