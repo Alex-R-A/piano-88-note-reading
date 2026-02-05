@@ -132,7 +132,8 @@ export function useMicInput(
           if (sb.length === CONSECUTIVE_FRAMES_REQUIRED && sb.every((n) => n === sb[0])) {
             const now = performance.now();
             if (pitchClass === lastEmittedRef.current && now < cooldownUntilRef.current) {
-              // Same note within cooldown, skip
+              // Same note within cooldown, reset buffer to require fresh detection after cooldown
+              stabilityBufferRef.current = [];
             } else {
               onNoteDetectedRef.current(pitchClass);
               lastEmittedRef.current = pitchClass;
