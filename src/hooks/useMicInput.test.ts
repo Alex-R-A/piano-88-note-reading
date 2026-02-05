@@ -421,6 +421,39 @@ describe('useMicInput', () => {
     expect(onNote).toHaveBeenCalledTimes(2);
   });
 
+  // --- Suppression ---
+
+  it('suppressDetection blocks emission during suppression window', async () => {
+    const onNote = vi.fn();
+    const { result } = renderHook(() => useMicInput(onNote));
+
+    await act(async () => {
+      await result.current.startMic();
+    });
+
+    // Calibrate
+    fillBufferWithRMS(0.01);
+    vi.spyOn(performance, 'now').mockReturnValue(1100);
+    act(() => tickFrames(1));
+    expect(result.current.micState).toBe('listening');
+
+    // Suppress for 2000ms
+    vi.spyOn(performance, 'now').mockReturnValue(1200);
+    act(() => result.current.suppressDetection(2000));
+
+    // Strong signal during suppression window
+    fillBufferWithRMS(0.5);
+    mockFindPitchResult = [440, 0.95];
+    vi.spyOn(performance, 'now').mockReturnValue(2000);
+    act(() => tickFrames(5));
+    expect(onNote).not.toHaveBeenCalled();
+
+    // After suppression expires
+    vi.spyOn(performance, 'now').mockReturnValue(3300);
+    act(() => tickFrames(3));
+    expect(onNote).toHaveBeenCalledWith('A');
+  });
+
   // --- Cleanup ---
 
   it('stopMic stops tracks and closes AudioContext', async () => {

@@ -31,7 +31,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   const showStaffDisplay = useSettingsStore((state) => state.showStaffDisplay);
   const micEnabled = useSettingsStore((state) => state.micEnabled);
 
-  const { micState, errorMessage: micError, startMic, stopMic } = useMicInput(handleKeyClick);
+  const { micState, errorMessage: micError, startMic, stopMic, suppressDetection } = useMicInput(handleKeyClick);
 
   useEffect(() => {
     if (micEnabled && micState === 'idle') {
@@ -46,14 +46,16 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
 
   // Trigger page transition when a new note is selected
   // Uses a key-based approach: increment key to remount the overlay with fresh animation
+  // Also suppress mic detection to avoid picking up the played sample audio
   useEffect(() => {
     if (noteSelectionId !== prevSelectionIdRef.current && noteSelectionId > 0) {
       prevSelectionIdRef.current = noteSelectionId;
       setShowTransition(true);
+      suppressDetection(2000);
       const timer = setTimeout(() => setShowTransition(false), 400);
       return () => clearTimeout(timer);
     }
-  }, [noteSelectionId]);
+  }, [noteSelectionId, suppressDetection]);
 
   // Initialize audio immediately when lesson screen mounts
   // Browser requires user gesture, so we also listen for first click as fallback

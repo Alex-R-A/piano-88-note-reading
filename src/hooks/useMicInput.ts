@@ -9,6 +9,7 @@ export interface UseMicInputReturn {
   errorMessage: string | null;
   startMic: () => Promise<void>;
   stopMic: () => void;
+  suppressDetection: (durationMs: number) => void;
 }
 
 const CLARITY_THRESHOLD = 0.9;
@@ -53,6 +54,7 @@ export function useMicInput(
   const stabilityBufferRef = useRef<PitchClass[]>([]);
   const lastEmittedRef = useRef<PitchClass | null>(null);
   const cooldownUntilRef = useRef(0);
+  const suppressUntilRef = useRef(0);
 
   const calibrationSamplesRef = useRef<number[]>([]);
   const calibrationStartRef = useRef(0);
@@ -84,6 +86,7 @@ export function useMicInput(
     lastEmittedRef.current = null;
     cooldownUntilRef.current = 0;
     calibrationSamplesRef.current = [];
+    suppressUntilRef.current = 0;
   }, []);
 
   const detectionLoop = useCallback(() => {
@@ -108,6 +111,11 @@ export function useMicInput(
         setMicState('listening');
       }
     } else if (micStateRef.current === 'listening') {
+      if (performance.now() < suppressUntilRef.current) {
+        stabilityBufferRef.current = [];
+        rafIdRef.current = requestAnimationFrame(detectionLoop);
+        return;
+      }
       if (rms < noiseFloorRef.current) {
         stabilityBufferRef.current = [];
       } else {
@@ -192,6 +200,11 @@ export function useMicInput(
     }
   }, [cleanup, detectionLoop]);
 
+  const suppressDetection = useCallback((durationMs: number) => {
+    suppressUntilRef.current = performance.now() + durationMs;
+    stabilityBufferRef.current = [];
+  }, []);
+
   const stopMic = useCallback(() => {
     cleanup();
     micStateRef.current = 'idle';
@@ -201,5 +214,5 @@ export function useMicInput(
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  return { micState, errorMessage, startMic, stopMic };
+  return { micState, errorMessage, startMic, stopMic, suppressDetection };
 }
