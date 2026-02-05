@@ -72,12 +72,14 @@ describe('MainScreen', () => {
   });
 
   describe('Settings toggles', () => {
-    it('should render three toggle switches', () => {
+    it('should render all toggle switches', () => {
       render(<MainScreen onStartLesson={() => {}} />);
 
       expect(screen.getByLabelText('Include sharps and flats')).toBeInTheDocument();
       expect(screen.getByLabelText('Enable audio')).toBeInTheDocument();
       expect(screen.getByLabelText('Show correct answer after wrong answer')).toBeInTheDocument();
+      expect(screen.getByLabelText('Show visual staff with note')).toBeInTheDocument();
+      expect(screen.getByLabelText('Use microphone for note detection')).toBeInTheDocument();
     });
 
     it('should have correct default toggle states', () => {

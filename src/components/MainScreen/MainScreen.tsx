@@ -17,11 +17,13 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
     audioEnabled,
     showCorrectAnswer,
     showStaffDisplay,
+    micEnabled,
     toggleOctave,
     setIncludeSharpsFlats,
     setAudioEnabled,
     setShowCorrectAnswer,
     setShowStaffDisplay,
+    setMicEnabled,
     isStartEnabled,
   } = useSettingsStore();
 
@@ -49,10 +51,12 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
           audioEnabled={audioEnabled}
           showCorrectAnswer={showCorrectAnswer}
           showStaffDisplay={showStaffDisplay}
+          micEnabled={micEnabled}
           onIncludeSharpsFlatsChange={setIncludeSharpsFlats}
           onAudioEnabledChange={setAudioEnabled}
           onShowCorrectAnswerChange={setShowCorrectAnswer}
           onShowStaffDisplayChange={setShowStaffDisplay}
+          onMicEnabledChange={setMicEnabled}
         />
       </div>
 

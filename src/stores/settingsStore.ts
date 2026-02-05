@@ -7,6 +7,7 @@ interface SettingsStore {
   audioEnabled: boolean;
   showCorrectAnswer: boolean;
   showStaffDisplay: boolean;
+  micEnabled: boolean;
 
   // Actions
   toggleOctave: (octave: number) => void;
@@ -14,6 +15,7 @@ interface SettingsStore {
   setAudioEnabled: (value: boolean) => void;
   setShowCorrectAnswer: (value: boolean) => void;
   setShowStaffDisplay: (value: boolean) => void;
+  setMicEnabled: (value: boolean) => void;
   isStartEnabled: () => boolean;
 }
 
@@ -23,6 +25,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   audioEnabled: true, // Default: on
   showCorrectAnswer: false, // Default: off
   showStaffDisplay: true, // Default: on (show visual staff)
+  micEnabled: false, // Default: off
 
   toggleOctave: (octave) =>
     set((state) => {
@@ -39,6 +42,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   setAudioEnabled: (value) => set({ audioEnabled: value }),
   setShowCorrectAnswer: (value) => set({ showCorrectAnswer: value }),
   setShowStaffDisplay: (value) => set({ showStaffDisplay: value }),
+  setMicEnabled: (value) => set({ micEnabled: value }),
 
   isStartEnabled: () => get().selectedOctaves.size > 0,
 }));

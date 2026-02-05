@@ -7,10 +7,12 @@ interface SettingsPanelProps {
   audioEnabled: boolean;
   showCorrectAnswer: boolean;
   showStaffDisplay: boolean;
+  micEnabled: boolean;
   onIncludeSharpsFlatsChange: (value: boolean) => void;
   onAudioEnabledChange: (value: boolean) => void;
   onShowCorrectAnswerChange: (value: boolean) => void;
   onShowStaffDisplayChange: (value: boolean) => void;
+  onMicEnabledChange: (value: boolean) => void;
 }
 
 export function SettingsPanel({
@@ -18,10 +20,12 @@ export function SettingsPanel({
   audioEnabled,
   showCorrectAnswer,
   showStaffDisplay,
+  micEnabled,
   onIncludeSharpsFlatsChange,
   onAudioEnabledChange,
   onShowCorrectAnswerChange,
   onShowStaffDisplayChange,
+  onMicEnabledChange,
 }: SettingsPanelProps) {
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-md border border-slate-200">
@@ -77,6 +81,19 @@ export function SettingsPanel({
             checked={showStaffDisplay}
             onCheckedChange={onShowStaffDisplayChange}
             aria-label="Show visual staff with note"
+          />
+        </div>
+
+        {/* Use Microphone */}
+        <div className="flex items-center justify-between gap-6">
+          <label htmlFor="mic" className="text-slate-700">
+            Use Microphone
+          </label>
+          <Toggle
+            id="mic"
+            checked={micEnabled}
+            onCheckedChange={onMicEnabledChange}
+            aria-label="Use microphone for note detection"
           />
         </div>
       </div>
