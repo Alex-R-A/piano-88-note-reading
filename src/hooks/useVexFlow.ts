@@ -62,14 +62,16 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
       staveNote.addModifier(new Accidental('b'));
     }
 
-    // Shift note to the right to center it on stave
-    staveNote.setXShift(25);
-
     // Create voice and format
     const voice = new Voice({ numBeats: 4, beatValue: 4 });
     voice.addTickable(staveNote);
 
-    new Formatter().joinVoices([voice]).format([voice], 50);
+    new Formatter().joinVoices([voice]).format([voice], 30);
+
+    // Shift via TickContext so accidental moves with the notehead
+    // (staveNote.setXShift only moves the notehead, leaving accidental anchored)
+    const tc = staveNote.getTickContext();
+    tc.setX(tc.getX() + 25);
 
     // Draw the voice
     voice.draw(context, stave);
