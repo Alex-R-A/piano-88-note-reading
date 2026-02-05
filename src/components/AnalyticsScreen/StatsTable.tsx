@@ -1,7 +1,7 @@
 // components/AnalyticsScreen/StatsTable.tsx
 
 import type { NoteId, NoteStats } from '@/types';
-import { MiniStaffNote } from './MiniStaffNote';
+import { parseNote, extractPitchClass } from '@/utils/noteUtils';
 
 interface NoteStatEntry {
   noteId: NoteId;
@@ -35,7 +35,7 @@ function getRowColor(accuracy: number): string {
 /**
  * Displays per-note statistics table.
  * Per spec lines 344-361: sorted by accuracy ascending (worst first),
- * with visual accuracy bar and row coloring based on performance.
+ * with row coloring based on performance.
  */
 export function StatsTable({ perNote }: StatsTableProps) {
   // Filter out notes with zero appearances and sort by accuracy ascending
@@ -54,7 +54,8 @@ export function StatsTable({ perNote }: StatsTableProps) {
       <table className="w-full" data-testid="stats-table">
         <thead>
           <tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            <th className="px-6 py-4">Note</th>
+            <th className="px-4 py-4 text-center">Octave</th>
+            <th className="px-4 py-4">Note</th>
             <th className="px-4 py-4 text-center">Shown</th>
             <th className="px-4 py-4 text-center">Correct</th>
             <th className="px-4 py-4 text-center">Wrong</th>
@@ -66,6 +67,8 @@ export function StatsTable({ perNote }: StatsTableProps) {
             const accuracy = getAccuracy(stats);
             const roundedAccuracy = Math.round(accuracy);
             const bgColor = getRowColor(accuracy);
+            const octave = parseNote(noteId).octave;
+            const pitchClass = extractPitchClass(noteId);
 
             return (
               <tr
@@ -73,9 +76,8 @@ export function StatsTable({ perNote }: StatsTableProps) {
                 className={bgColor}
                 data-testid={`stats-row-${noteId}`}
               >
-                <td className="px-6 py-3">
-                  <MiniStaffNote noteId={noteId} />
-                </td>
+                <td className="px-4 py-3 text-center text-slate-600 font-medium">{octave}</td>
+                <td className="px-4 py-3 text-slate-800 font-medium">{pitchClass}</td>
                 <td className="px-4 py-3 text-center text-slate-600 font-medium">{stats.shown}</td>
                 <td className="px-4 py-3 text-center text-emerald-600 font-medium">{stats.correct}</td>
                 <td className="px-4 py-3 text-center text-red-500 font-medium">{stats.shown - stats.correct}</td>

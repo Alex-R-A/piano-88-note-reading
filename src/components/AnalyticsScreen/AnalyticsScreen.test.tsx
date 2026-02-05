@@ -10,9 +10,9 @@ import type { NoteStats } from '@/types';
 
 describe('AccuracyHeader', () => {
   describe('accuracy calculation display', () => {
-    it('should display "Session Complete!" title', () => {
+    it('should display "Session Complete" title', () => {
       render(<AccuracyHeader overallAccuracy={75} />);
-      expect(screen.getByText('Session Complete!')).toBeInTheDocument();
+      expect(screen.getByText('Session Complete')).toBeInTheDocument();
     });
 
     it('should display overall accuracy percentage', () => {
@@ -60,44 +60,44 @@ describe('getAccuracy', () => {
 
 describe('getRowColor', () => {
   describe('red background for 0-40% accuracy', () => {
-    it('should return red for 0%', () => {
-      expect(getRowColor(0)).toBe('#fee2e2');
+    it('should return bg-red-50 for 0%', () => {
+      expect(getRowColor(0)).toBe('bg-red-50');
     });
 
-    it('should return red for 25%', () => {
-      expect(getRowColor(25)).toBe('#fee2e2');
+    it('should return bg-red-50 for 25%', () => {
+      expect(getRowColor(25)).toBe('bg-red-50');
     });
 
-    it('should return red for 40%', () => {
-      expect(getRowColor(40)).toBe('#fee2e2');
+    it('should return bg-red-50 for 40%', () => {
+      expect(getRowColor(40)).toBe('bg-red-50');
     });
   });
 
   describe('yellow background for 41-70% accuracy', () => {
-    it('should return yellow for 41%', () => {
-      expect(getRowColor(41)).toBe('#fef9c3');
+    it('should return bg-amber-50 for 41%', () => {
+      expect(getRowColor(41)).toBe('bg-amber-50');
     });
 
-    it('should return yellow for 50%', () => {
-      expect(getRowColor(50)).toBe('#fef9c3');
+    it('should return bg-amber-50 for 50%', () => {
+      expect(getRowColor(50)).toBe('bg-amber-50');
     });
 
-    it('should return yellow for 70%', () => {
-      expect(getRowColor(70)).toBe('#fef9c3');
+    it('should return bg-amber-50 for 70%', () => {
+      expect(getRowColor(70)).toBe('bg-amber-50');
     });
   });
 
   describe('green background for 71-100% accuracy', () => {
-    it('should return green for 71%', () => {
-      expect(getRowColor(71)).toBe('#dcfce7');
+    it('should return bg-emerald-50 for 71%', () => {
+      expect(getRowColor(71)).toBe('bg-emerald-50');
     });
 
-    it('should return green for 85%', () => {
-      expect(getRowColor(85)).toBe('#dcfce7');
+    it('should return bg-emerald-50 for 85%', () => {
+      expect(getRowColor(85)).toBe('bg-emerald-50');
     });
 
-    it('should return green for 100%', () => {
-      expect(getRowColor(100)).toBe('#dcfce7');
+    it('should return bg-emerald-50 for 100%', () => {
+      expect(getRowColor(100)).toBe('bg-emerald-50');
     });
   });
 });
@@ -136,31 +136,31 @@ describe('StatsTable', () => {
   });
 
   describe('row coloring based on accuracy ranges', () => {
-    it('should apply red background for 0-40% accuracy', () => {
+    it('should apply red background class for 0-40% accuracy', () => {
       const perNote = [{ noteId: 'C4', stats: { shown: 10, correct: 2 } }]; // 20%
 
       render(<StatsTable perNote={perNote} />);
 
       const row = screen.getByTestId('stats-row-C4');
-      expect(row).toHaveStyle({ backgroundColor: '#fee2e2' });
+      expect(row).toHaveClass('bg-red-50');
     });
 
-    it('should apply yellow background for 41-70% accuracy', () => {
+    it('should apply yellow background class for 41-70% accuracy', () => {
       const perNote = [{ noteId: 'D4', stats: { shown: 10, correct: 5 } }]; // 50%
 
       render(<StatsTable perNote={perNote} />);
 
       const row = screen.getByTestId('stats-row-D4');
-      expect(row).toHaveStyle({ backgroundColor: '#fef9c3' });
+      expect(row).toHaveClass('bg-amber-50');
     });
 
-    it('should apply green background for 71-100% accuracy', () => {
+    it('should apply green background class for 71-100% accuracy', () => {
       const perNote = [{ noteId: 'E4', stats: { shown: 10, correct: 9 } }]; // 90%
 
       render(<StatsTable perNote={perNote} />);
 
       const row = screen.getByTestId('stats-row-E4');
-      expect(row).toHaveStyle({ backgroundColor: '#dcfce7' });
+      expect(row).toHaveClass('bg-emerald-50');
     });
   });
 
@@ -193,25 +193,34 @@ describe('StatsTable', () => {
       expect(screen.queryByTestId('stats-row-D4')).not.toBeInTheDocument();
     });
 
-    it('should display correct data in each column', () => {
+    it('should display octave and pitch class in separate columns', () => {
       const perNote = [{ noteId: 'G4', stats: { shown: 12, correct: 9 } }]; // 75%
 
       render(<StatsTable perNote={perNote} />);
 
       const row = screen.getByTestId('stats-row-G4');
-      expect(within(row).getByText('G4')).toBeInTheDocument();
+      expect(within(row).getByText('4')).toBeInTheDocument();
+      expect(within(row).getByText('G')).toBeInTheDocument();
       expect(within(row).getByText('12')).toBeInTheDocument();
       expect(within(row).getByText('9')).toBeInTheDocument();
       expect(within(row).getByText('75%')).toBeInTheDocument();
     });
 
-    it('should render accuracy bar with correct width', () => {
-      const perNote = [{ noteId: 'A4', stats: { shown: 10, correct: 6 } }]; // 60%
+    it('should display accidentals in pitch class column', () => {
+      const perNote = [
+        { noteId: 'F#5', stats: { shown: 6, correct: 3 } },
+        { noteId: 'Bb3', stats: { shown: 7, correct: 2 } },
+      ];
 
       render(<StatsTable perNote={perNote} />);
 
-      const bar = screen.getByTestId('accuracy-bar-A4');
-      expect(bar).toHaveStyle({ width: '60%' });
+      const sharpRow = screen.getByTestId('stats-row-F#5');
+      expect(within(sharpRow).getByText('F#')).toBeInTheDocument();
+      expect(within(sharpRow).getByText('5')).toBeInTheDocument();
+
+      const flatRow = screen.getByTestId('stats-row-Bb3');
+      expect(within(flatRow).getByText('Bb')).toBeInTheDocument();
+      expect(within(flatRow).getByText('3')).toBeInTheDocument();
     });
   });
 
@@ -257,7 +266,7 @@ describe('AnalyticsScreen', () => {
   it('should display header with overall accuracy', () => {
     render(<AnalyticsScreen onBackToMain={() => {}} />);
 
-    expect(screen.getByText('Session Complete!')).toBeInTheDocument();
+    expect(screen.getByText('Session Complete')).toBeInTheDocument();
     // Total: 23 shown, 14 correct = 60.87% -> 61%
     expect(screen.getByTestId('overall-accuracy')).toHaveTextContent('61%');
   });
