@@ -34,8 +34,16 @@ coverage/
 .env.local
 .env.*.local
 
+# TypeScript
+*.tsbuildinfo
+
 # Vite
 *.local
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
 
 # macOS
 .DS_Store
