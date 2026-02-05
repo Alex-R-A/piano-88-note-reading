@@ -13,3 +13,6 @@ export { useVexFlow } from './useVexFlow';
 
 export { useAudio, useAudioCleanup } from './useAudio';
 export type { UseAudioReturn } from './useAudio';
+
+export { useMicInput } from './useMicInput';
+export type { UseMicInputReturn, MicState } from './useMicInput';

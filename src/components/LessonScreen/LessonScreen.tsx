@@ -4,7 +4,7 @@ import { FeedbackOverlay } from './FeedbackOverlay';
 import { StaffDisplay } from './StaffDisplay';
 import { PianoKeyboard3D } from './PianoKeyboard3D';
 import { Button } from '@/components/ui';
-import { useLessonEngine } from '@/hooks';
+import { useLessonEngine, useMicInput } from '@/hooks';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { PitchClass } from '@/types';
@@ -29,6 +29,17 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
 
   const noteSelectionId = useLessonStore((state) => state.noteSelectionId);
   const showStaffDisplay = useSettingsStore((state) => state.showStaffDisplay);
+  const micEnabled = useSettingsStore((state) => state.micEnabled);
+
+  const { micState, errorMessage: micError, startMic, stopMic } = useMicInput(handleKeyClick);
+
+  useEffect(() => {
+    if (micEnabled && micState === 'idle') {
+      startMic();
+    } else if (!micEnabled && micState !== 'idle') {
+      stopMic();
+    }
+  }, [micEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
   const [showTransition, setShowTransition] = useState(false);
   const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
@@ -110,6 +121,15 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
           highlightedKey={highlightedKey}
         />
       </div>
+
+      {/* Mic Status Indicator */}
+      {micEnabled && (
+        <div className="text-sm text-center mb-2">
+          {micState === 'calibrating' && <span className="text-amber-600">Calibrating mic...</span>}
+          {micState === 'listening' && <span className="text-green-600">Mic active</span>}
+          {micState === 'error' && <span className="text-red-600">{micError}</span>}
+        </div>
+      )}
 
       {/* Stop Lesson Button */}
       <Button
