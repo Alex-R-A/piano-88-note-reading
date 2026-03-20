@@ -48,7 +48,7 @@ export function useMicInput(
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const detectorRef = useRef<PitchDetector<Float32Array> | null>(null);
-  const bufferRef = useRef<Float32Array | null>(null);
+  const bufferRef = useRef<Float32Array<ArrayBuffer> | null>(null);
 
   const noiseFloorRef = useRef(0);
   const stabilityBufferRef = useRef<PitchClass[]>([]);
