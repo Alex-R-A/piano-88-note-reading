@@ -8,6 +8,7 @@ interface SettingsPanelProps {
   showCorrectAnswer: boolean;
   showStaffDisplay: boolean;
   micEnabled: boolean;
+  micError?: string | null;
   onIncludeSharpsFlatsChange: (value: boolean) => void;
   onAudioEnabledChange: (value: boolean) => void;
   onShowCorrectAnswerChange: (value: boolean) => void;
@@ -21,6 +22,7 @@ export function SettingsPanel({
   showCorrectAnswer,
   showStaffDisplay,
   micEnabled,
+  micError,
   onIncludeSharpsFlatsChange,
   onAudioEnabledChange,
   onShowCorrectAnswerChange,
@@ -96,6 +98,9 @@ export function SettingsPanel({
             aria-label="Use microphone for note detection"
           />
         </div>
+        {micError && (
+          <p className="text-sm text-red-500 mt-1">{micError}</p>
+        )}
       </div>
     </div>
   );

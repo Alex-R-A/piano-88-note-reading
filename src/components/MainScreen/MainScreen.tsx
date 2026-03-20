@@ -1,6 +1,8 @@
 // components/MainScreen/MainScreen.tsx
 
+import { useState } from 'react';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { requestMicPermission } from '@/utils/micPermission';
 import { PianoOverview } from './PianoOverview';
 import { SettingsPanel } from './SettingsPanel';
 import { Button } from '../ui/Button';
@@ -26,6 +28,22 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
     setMicEnabled,
     isStartEnabled,
   } = useSettingsStore();
+
+  const [micError, setMicError] = useState<string | null>(null);
+
+  const handleMicToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const result = await requestMicPermission();
+      if (!result.granted) {
+        setMicError(result.error ?? 'Failed to access microphone.');
+        return;
+      }
+      setMicError(null);
+    } else {
+      setMicError(null);
+    }
+    setMicEnabled(enabled);
+  };
 
   // Disable start if no octaves selected OR if WebGL is not supported
   const canStart = isStartEnabled() && !webGLDisabled;
@@ -56,7 +74,8 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
           onAudioEnabledChange={setAudioEnabled}
           onShowCorrectAnswerChange={setShowCorrectAnswer}
           onShowStaffDisplayChange={setShowStaffDisplay}
-          onMicEnabledChange={setMicEnabled}
+          onMicEnabledChange={handleMicToggle}
+          micError={micError}
         />
       </div>
 

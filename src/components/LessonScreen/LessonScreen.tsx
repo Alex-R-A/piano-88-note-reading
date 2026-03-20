@@ -31,7 +31,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   const showStaffDisplay = useSettingsStore((state) => state.showStaffDisplay);
   const micEnabled = useSettingsStore((state) => state.micEnabled);
 
-  const { micState, errorMessage: micError, startMic, stopMic, suppressDetection } = useMicInput(handleKeyClick);
+  const { micState, errorMessage: micError, detectedPitch, startMic, stopMic, suppressDetection } = useMicInput(handleKeyClick);
 
   useEffect(() => {
     if (micEnabled && micState === 'idle') {
@@ -40,6 +40,14 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       stopMic();
     }
   }, [micEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Suppress mic detection during feedback audio playback (correct/incorrect answer sounds)
+  useEffect(() => {
+    if (feedbackState === 'correct' || feedbackState === 'incorrect') {
+      suppressDetection(1500);
+    }
+  }, [feedbackState, suppressDetection]);
+
   const [showTransition, setShowTransition] = useState(false);
   const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
@@ -128,7 +136,11 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       {micEnabled && (
         <div className="text-sm text-center mb-2">
           {micState === 'calibrating' && <span className="text-amber-600">Calibrating mic...</span>}
-          {micState === 'listening' && <span className="text-green-600">Mic active</span>}
+          {micState === 'listening' && (
+            <span className="text-green-600">
+              Mic active{detectedPitch && <span className="text-slate-500"> · {detectedPitch}</span>}
+            </span>
+          )}
           {micState === 'error' && <span className="text-red-600">{micError}</span>}
         </div>
       )}

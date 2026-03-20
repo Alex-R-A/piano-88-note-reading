@@ -7,6 +7,7 @@ export type MicState = 'idle' | 'calibrating' | 'listening' | 'error';
 export interface UseMicInputReturn {
   micState: MicState;
   errorMessage: string | null;
+  detectedPitch: PitchClass | null;
   startMic: () => Promise<void>;
   stopMic: () => void;
   suppressDetection: (durationMs: number) => void;
@@ -42,6 +43,8 @@ export function useMicInput(
 ): UseMicInputReturn {
   const [micState, setMicState] = useState<MicState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [detectedPitch, setDetectedPitch] = useState<PitchClass | null>(null);
+  const lastDetectedPitchRef = useRef<PitchClass | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -84,6 +87,7 @@ export function useMicInput(
     bufferRef.current = null;
     stabilityBufferRef.current = [];
     lastEmittedRef.current = null;
+    lastDetectedPitchRef.current = null;
     cooldownUntilRef.current = 0;
     calibrationSamplesRef.current = [];
     suppressUntilRef.current = 0;
@@ -113,17 +117,33 @@ export function useMicInput(
     } else if (micStateRef.current === 'listening') {
       if (performance.now() < suppressUntilRef.current) {
         stabilityBufferRef.current = [];
+        if (lastDetectedPitchRef.current !== null) {
+          lastDetectedPitchRef.current = null;
+          setDetectedPitch(null);
+        }
         rafIdRef.current = requestAnimationFrame(detectionLoop);
         return;
       }
       if (rms < noiseFloorRef.current) {
         stabilityBufferRef.current = [];
+        if (lastDetectedPitchRef.current !== null) {
+          lastDetectedPitchRef.current = null;
+          setDetectedPitch(null);
+        }
       } else {
         const [freq, clarity] = detector.findPitch(buffer, ctx.sampleRate);
         if (clarity < CLARITY_THRESHOLD) {
           stabilityBufferRef.current = [];
+          if (lastDetectedPitchRef.current !== null) {
+            lastDetectedPitchRef.current = null;
+            setDetectedPitch(null);
+          }
         } else {
           const pitchClass = frequencyToPitchClass(freq);
+          if (lastDetectedPitchRef.current !== pitchClass) {
+            lastDetectedPitchRef.current = pitchClass;
+            setDetectedPitch(pitchClass);
+          }
           const sb = stabilityBufferRef.current;
           sb.push(pitchClass);
           if (sb.length > CONSECUTIVE_FRAMES_REQUIRED) {
@@ -211,9 +231,10 @@ export function useMicInput(
     micStateRef.current = 'idle';
     setMicState('idle');
     setErrorMessage(null);
+    setDetectedPitch(null);
   }, [cleanup]);
 
   useEffect(() => () => cleanup(), [cleanup]);
 
-  return { micState, errorMessage, startMic, stopMic, suppressDetection };
+  return { micState, errorMessage, detectedPitch, startMic, stopMic, suppressDetection };
 }
