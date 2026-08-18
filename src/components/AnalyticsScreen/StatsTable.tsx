@@ -45,15 +45,15 @@ export function StatsTable({ perNote }: StatsTableProps) {
 
   if (sortedStats.length === 0) {
     return (
-      <div className="text-center text-slate-400 py-8">No notes were practiced in this session.</div>
+      <div className="text-center text-ink-400 py-8">No notes were practiced in this session.</div>
     );
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="w-full max-w-2xl mx-auto bg-ivory-50 rounded-xl shadow-lift ring-1 ring-ink-200 overflow-hidden">
       <table className="w-full" data-testid="stats-table">
         <thead>
-          <tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <tr className="bg-ink-50 text-left text-[11px] font-medium text-ink-500 uppercase tracking-[0.18em] border-b border-brass-300">
             <th className="px-4 py-4 text-center">Octave</th>
             <th className="px-4 py-4">Note</th>
             <th className="px-4 py-4 text-center">Shown</th>
@@ -62,7 +62,7 @@ export function StatsTable({ perNote }: StatsTableProps) {
             <th className="px-4 py-4 text-center">Accuracy</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-ink-100">
           {sortedStats.map(({ noteId, stats }) => {
             const accuracy = getAccuracy(stats);
             const roundedAccuracy = Math.round(accuracy);
@@ -76,12 +76,12 @@ export function StatsTable({ perNote }: StatsTableProps) {
                 className={bgColor}
                 data-testid={`stats-row-${noteId}`}
               >
-                <td className="px-4 py-3 text-center text-slate-600 font-medium">{octave}</td>
-                <td className="px-4 py-3 text-slate-800 font-medium">{pitchClass}</td>
-                <td className="px-4 py-3 text-center text-slate-600 font-medium">{stats.shown}</td>
-                <td className="px-4 py-3 text-center text-emerald-600 font-medium">{stats.correct}</td>
-                <td className="px-4 py-3 text-center text-red-500 font-medium">{stats.shown - stats.correct}</td>
-                <td className="px-4 py-3 text-center text-slate-700 font-semibold">{roundedAccuracy}%</td>
+                <td className="px-4 py-3 text-center text-ink-600">{octave}</td>
+                <td className="px-4 py-3 font-display text-lg font-semibold text-ink-900">{pitchClass}</td>
+                <td className="px-4 py-3 text-center text-ink-600">{stats.shown}</td>
+                <td className="px-4 py-3 text-center text-emerald-700">{stats.correct}</td>
+                <td className="px-4 py-3 text-center text-felt-600">{stats.shown - stats.correct}</td>
+                <td className="px-4 py-3 text-center text-ink-800 font-medium">{roundedAccuracy}%</td>
               </tr>
             );
           })}

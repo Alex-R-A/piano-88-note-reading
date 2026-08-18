@@ -11,13 +11,24 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', className = '', disabled, children, ...props }, ref) => {
     const baseStyles =
-      'px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+      'px-6 py-3 rounded-md font-medium tracking-wide transition-all duration-200 ' +
+      'focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2 ' +
+      'focus-visible:ring-offset-ivory';
 
     const variantStyles: Record<ButtonVariant, string> = {
+      // Ebony body with a brass hairline: the instrument's own materials.
       primary:
-        'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-300',
+        'bg-ink-900 text-ivory-50 shadow-card ring-1 ring-inset ring-brass-700/40 ' +
+        'hover:bg-ink-800 hover:shadow-lift hover:ring-brass-500/60 ' +
+        'active:translate-y-px active:shadow-card ' +
+        'disabled:bg-ink-200 disabled:text-ink-400 disabled:ring-transparent ' +
+        'disabled:shadow-none disabled:cursor-not-allowed disabled:hover:bg-ink-200',
       secondary:
-        'bg-transparent border-2 border-gray-400 text-gray-700 hover:border-gray-600 hover:text-gray-900 focus:ring-gray-500 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed',
+        'bg-ivory-50 text-ink-700 ring-1 ring-inset ring-ink-200 shadow-card ' +
+        'hover:text-ink-900 hover:ring-brass-400 hover:shadow-lift ' +
+        'active:translate-y-px active:shadow-card ' +
+        'disabled:text-ink-300 disabled:ring-ink-100 disabled:shadow-none ' +
+        'disabled:cursor-not-allowed',
     };
 
     return (

@@ -1,5 +1,12 @@
 // components/MainScreen/OctaveBox.tsx
 
+import { BLACK_KEY_CENTERS } from '@/utils/keyGeometry';
+
+// The true 0.58 black-to-white width ratio leaves ~6px tails at this size,
+// which merge into a black band. Narrowed for legibility; the centres, which
+// carry the recognisable offset pattern, stay exact.
+const MINI_BLACK_WIDTH = 0.46;
+
 interface OctaveBoxProps {
   octave: number;
   checked: boolean;
@@ -20,71 +27,92 @@ function getOctaveLabel(octave: number): string {
   return '(C-B)';
 }
 
+/**
+ * A miniature keyboard, measured in white-key widths and converted to
+ * percentages so it scales with the box.
+ *
+ * Black key placement comes from the same layout the 3D keyboard uses, so the
+ * two views of the instrument agree: C#/F# sit left of the white key boundary,
+ * D#/A# right of it, and only G# lands on it.
+ */
+function MiniKeyboard({
+  whiteCount,
+  blackCenters,
+}: {
+  whiteCount: number;
+  blackCenters: number[];
+}) {
+  const pct = (units: number) => `${(units / whiteCount) * 100}%`;
+  // 12px of key plus a 1px hairline each, matching the original footprint so
+  // the row of boxes keeps its shape.
+  const width = 13 * whiteCount + 1;
+
+  return (
+    <div className="flex flex-col items-stretch" style={{ width }}>
+      {/* Damper felt, as on the real instrument's key slip. */}
+      <div className="h-[2px] rounded-t-[2px] bg-felt-700" />
+      <div className="relative flex h-8 gap-px rounded-b-[3px] bg-ink-400 p-px shadow-key">
+        {Array.from({ length: whiteCount }).map((_, i) => (
+          <div
+            key={i}
+            className="h-full flex-1 rounded-b-[2px] bg-gradient-to-b from-ivory-50 via-ivory to-ivory-200"
+          />
+        ))}
+        {blackCenters.map((center) => (
+          <div
+            key={center}
+            className="absolute top-0 h-5 rounded-b-[2px] bg-gradient-to-b from-ink-700 to-ink-900 shadow-sm"
+            style={{
+              left: pct(center - MINI_BLACK_WIDTH / 2),
+              width: pct(MINI_BLACK_WIDTH),
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function OctaveBox({ octave, checked, onToggle }: OctaveBoxProps) {
   const label = getOctaveLabel(octave);
 
-  // Render simplified 2D keys within the octave box
-  // Black keys sit between specific white keys: C#(C-D), D#(D-E), F#(F-G), G#(G-A), A#(A-B)
   const renderKeys = () => {
     if (octave === 0) {
-      // A0, Bb0, B0 - special layout
-      return (
-        <div className="flex h-8 gap-px">
-          {/* A key (white) */}
-          <div className="relative w-3 h-full">
-            <div className="absolute inset-0 bg-white border border-gray-400 rounded-b-sm" />
-            {/* Black key Bb between A and B */}
-            <div className="absolute -right-1 top-0 w-2 h-5 bg-gray-800 z-10 rounded-b-sm" />
-          </div>
-          {/* B key (white) */}
-          <div className="w-3 h-full bg-white border border-gray-400 rounded-b-sm" />
-        </div>
-      );
+      // A0, Bb0, B0: two white keys with one black between them.
+      return <MiniKeyboard whiteCount={2} blackCenters={[1]} />;
     }
-
     if (octave === 8) {
-      // C8 only
-      return (
-        <div className="flex h-8">
-          <div className="w-3 h-full bg-white border border-gray-400 rounded-b-sm" />
-        </div>
-      );
+      return <MiniKeyboard whiteCount={1} blackCenters={[]} />;
     }
-
-    // Full octave: C D E F G A B with black keys
-    // Black keys between: C-D, D-E, F-G, G-A, A-B
-    const whiteKeyWidth = 'w-3';
-    const blackKeyPositions = [0, 1, 3, 4, 5]; // Index of white key that has black key to its right
-
-    return (
-      <div className="relative flex h-8 gap-px">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className={`relative ${whiteKeyWidth} h-full`}>
-            <div className="absolute inset-0 bg-white border border-gray-400 rounded-b-sm" />
-            {blackKeyPositions.includes(i) && (
-              <div className="absolute -right-1 top-0 w-2 h-5 bg-gray-800 z-10 rounded-b-sm" />
-            )}
-          </div>
-        ))}
-      </div>
-    );
+    return <MiniKeyboard whiteCount={7} blackCenters={BLACK_KEY_CENTERS} />;
   };
 
   return (
     <button
       onClick={onToggle}
-      className={`flex flex-col items-center p-3 rounded-lg transition-all cursor-pointer ${
+      className={`flex flex-col items-center rounded-lg p-3 transition-all duration-200 cursor-pointer ${
         checked
-          ? 'bg-emerald-50 border-2 border-emerald-400 shadow-md'
-          : 'bg-white border-2 border-slate-200 hover:border-slate-300 hover:shadow-sm'
+          ? 'bg-brass-100 ring-1 ring-brass-500 shadow-lift'
+          : 'bg-ivory-50 ring-1 ring-ink-200 hover:ring-brass-300 hover:shadow-card'
       }`}
       aria-label={`Select octave ${octave}`}
       aria-pressed={checked}
     >
-      {/* Octave visualization */}
-      <div className="text-xs font-medium text-slate-600 mb-1">Oct {octave}</div>
+      <div
+        className={`mb-1.5 font-display text-sm font-semibold tracking-wide transition-colors ${
+          checked ? 'text-brass-800' : 'text-ink-600'
+        }`}
+      >
+        Oct {octave}
+      </div>
       {renderKeys()}
-      <div className="text-[10px] text-slate-400 mt-1">{label}</div>
+      <div
+        className={`mt-1.5 text-[10px] tracking-widest transition-colors ${
+          checked ? 'text-brass-700' : 'text-ink-400'
+        }`}
+      >
+        {label}
+      </div>
     </button>
   );
 }

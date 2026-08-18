@@ -24,10 +24,12 @@ export function StaffDisplay({ noteId }: StaffDisplayProps) {
   useVexFlow({ noteId, clef, containerRef });
 
   return (
+    // No card here: the render surface is 500x660 but the notation only fills
+    // part of it, so a bordered panel would frame mostly empty space. Letting
+    // the staff print straight onto the page's paper ground reads better.
     <div className="flex items-center justify-center">
       <div
         ref={containerRef}
-        className="bg-white"
         style={{ width: 500, height: 660 }}
         aria-label={noteId ? `Musical staff showing note ${noteId}` : 'Empty musical staff'}
       />

@@ -19,7 +19,7 @@ export function AnalyticsScreen({ onBackToMain }: AnalyticsScreenProps) {
   const { overall, perNote } = getSessionStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col items-center py-12 px-4">
+    <div className="surface-paper min-h-screen flex flex-col items-center py-12 px-4">
       <AccuracyHeader overallAccuracy={overall} />
 
       <StatsTable perNote={perNote} />
@@ -28,7 +28,7 @@ export function AnalyticsScreen({ onBackToMain }: AnalyticsScreenProps) {
         <Button
           onClick={onBackToMain}
           variant="secondary"
-          className="px-8 py-3 font-medium shadow-md hover:shadow-lg transition-shadow"
+          className="px-10 text-sm uppercase tracking-[0.18em]"
         >
           Back to Main Menu
         </Button>

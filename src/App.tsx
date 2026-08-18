@@ -33,12 +33,12 @@ function isWebGLSupported(): boolean {
  */
 function ViewportWarning() {
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 max-w-md text-center">
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">
+    <div className="fixed inset-0 bg-ink-900/90 flex items-center justify-center z-50 p-4">
+      <div className="bg-ivory-50 rounded-xl shadow-lift ring-1 ring-brass-600/40 p-8 max-w-md text-center">
+        <h2 className="font-display text-3xl font-semibold text-ink-900 mb-3">
           Larger Screen Recommended
         </h2>
-        <p className="text-gray-600">
+        <p className="text-ink-600 text-[0.95rem]">
           This application works best on screens at least 768px wide.
           Please use a tablet or desktop device for the optimal experience.
         </p>
@@ -52,12 +52,12 @@ function ViewportWarning() {
  */
 function WebGLWarning() {
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 max-w-md text-center">
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">
+    <div className="fixed inset-0 bg-ink-900/90 flex items-center justify-center z-50 p-4">
+      <div className="bg-ivory-50 rounded-xl shadow-lift ring-1 ring-brass-600/40 p-8 max-w-md text-center">
+        <h2 className="font-display text-3xl font-semibold text-ink-900 mb-3">
           3D Graphics Not Supported
         </h2>
-        <p className="text-gray-600">
+        <p className="text-ink-600 text-[0.95rem]">
           Your browser doesn't support 3D graphics (WebGL). Please use a modern
           browser like Chrome, Firefox, or Edge.
         </p>

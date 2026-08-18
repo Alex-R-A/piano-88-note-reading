@@ -2,6 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-ivory text-ink-800 font-sans antialiased;
+  }
+
+  /* Figures line up in the stats table and the accuracy readout. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /*
+   * Page ground. A flat gradient bands visibly across a wide viewport and
+   * reads as a form background; the grain breaks the banding and reads as
+   * paper. Kept faint enough to be felt rather than seen.
+   */
+  .surface-paper {
+    position: relative;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #fefdfa 0%, #faf7f1 45%, #f2ece1 100%);
+  }
+
+  .surface-paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Hairline that fades out at both ends, used under screen headings. */
+  .rule-brass {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      theme('colors.brass.400') 20%,
+      theme('colors.brass.500') 50%,
+      theme('colors.brass.400') 80%,
+      transparent
+    );
+  }
+
+  /*
+   * Seats the 3D keyboard on the page. Without it the instrument floats on a
+   * blank field, since the canvas is transparent and casts nothing outside
+   * its own geometry.
+   */
+  .keyboard-ground {
+    background: radial-gradient(
+      42% 34% at 50% 70%,
+      rgba(58, 52, 48, 0.14) 0%,
+      rgba(58, 52, 48, 0.06) 48%,
+      transparent 74%
+    );
+  }
+}
+
 /* Screen transition animations */
 .screen-transition {
   transition: opacity 150ms ease-in-out;

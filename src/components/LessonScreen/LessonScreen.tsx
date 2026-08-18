@@ -102,12 +102,14 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     feedbackState === 'showAnswer' ? correctPitchClass : null;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center py-8 px-4 relative">
+    <div className="surface-paper min-h-screen flex flex-col items-center py-8 px-4 relative">
       {/* Note transition overlay - white flash that fades out */}
       {showTransition && (
         <div
           key={noteSelectionId}
-          className="fixed inset-0 bg-white pointer-events-none z-50"
+          // Matches the page ground: a pure white flash reads as a strobe
+          // against the paper background rather than a page turn.
+          className="fixed inset-0 bg-ivory pointer-events-none z-50"
           style={{
             animation: 'fadeOut 400ms ease-out forwards',
           }}
@@ -124,8 +126,10 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
         </div>
       )}
 
-      {/* 3D Piano Keyboard */}
-      <div className="flex items-center justify-center mb-4">
+      {/* 3D Piano Keyboard. The canvas is transparent and the instrument casts
+          no shadow outside its own geometry, so a soft ground sits behind it to
+          keep it from floating on a blank field. */}
+      <div className="keyboard-ground flex items-center justify-center mb-4">
         <PianoKeyboard3D
           onKeyClick={onKeyClick}
           highlightedKey={highlightedKey}
@@ -134,14 +138,14 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
 
       {/* Mic Status Indicator */}
       {micEnabled && (
-        <div className="text-sm text-center mb-2">
-          {micState === 'calibrating' && <span className="text-amber-600">Calibrating mic...</span>}
+        <div className="text-xs uppercase tracking-[0.18em] text-center mb-3">
+          {micState === 'calibrating' && <span className="text-brass-700">Calibrating mic...</span>}
           {micState === 'listening' && (
-            <span className="text-green-600">
-              Mic active{detectedPitch && <span className="text-slate-500"> · {detectedPitch}</span>}
+            <span className="text-emerald-700">
+              Mic active{detectedPitch && <span className="text-ink-500"> &middot; {detectedPitch}</span>}
             </span>
           )}
-          {micState === 'error' && <span className="text-red-600">{micError}</span>}
+          {micState === 'error' && <span className="text-felt-600">{micError}</span>}
         </div>
       )}
 
@@ -149,7 +153,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       <Button
         variant="secondary"
         onClick={handleStopLesson}
-        className="px-6 py-3 hover:bg-red-500 hover:text-white hover:border-red-500"
+        className="px-8 text-sm uppercase tracking-[0.18em] hover:bg-felt-700 hover:text-ivory-50 hover:ring-felt-700"
       >
         Stop Lesson
       </Button>

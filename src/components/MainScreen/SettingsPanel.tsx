@@ -30,13 +30,17 @@ export function SettingsPanel({
   onMicEnabledChange,
 }: SettingsPanelProps) {
   return (
-    <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-md border border-slate-200">
-      <h2 className="text-base font-medium text-slate-600 mb-5 text-center uppercase tracking-wide">Settings</h2>
+    <div className="w-full max-w-md p-6 bg-ivory-50 rounded-xl shadow-card ring-1 ring-ink-200">
+      <h2 className="text-xs font-medium text-ink-500 mb-5 text-center uppercase tracking-[0.25em]">
+        Settings
+      </h2>
+      <div className="rule-brass mb-5 opacity-60" />
 
-      <div className="space-y-4">
+      {/* Hairlines between rows, the way a printed table of contents reads. */}
+      <div className="divide-y divide-ink-100 -my-2.5">
         {/* Include Sharps & Flats */}
-        <div className="flex items-center justify-between gap-6">
-          <label htmlFor="sharpsFlats" className="text-slate-700">
+        <div className="flex items-center justify-between gap-6 py-2.5">
+          <label htmlFor="sharpsFlats" className="text-ink-700 text-[0.95rem]">
             Include Sharps & Flats
           </label>
           <Toggle
@@ -48,8 +52,8 @@ export function SettingsPanel({
         </div>
 
         {/* Enable Audio */}
-        <div className="flex items-center justify-between gap-6">
-          <label htmlFor="audio" className="text-slate-700">
+        <div className="flex items-center justify-between gap-6 py-2.5">
+          <label htmlFor="audio" className="text-ink-700 text-[0.95rem]">
             Enable Audio
           </label>
           <Toggle
@@ -61,8 +65,8 @@ export function SettingsPanel({
         </div>
 
         {/* Show Correct Answer */}
-        <div className="flex items-center justify-between gap-6">
-          <label htmlFor="showAnswer" className="text-slate-700">
+        <div className="flex items-center justify-between gap-6 py-2.5">
+          <label htmlFor="showAnswer" className="text-ink-700 text-[0.95rem]">
             Show Correct Answer
           </label>
           <Toggle
@@ -74,8 +78,8 @@ export function SettingsPanel({
         </div>
 
         {/* Show Staff Display */}
-        <div className="flex items-center justify-between gap-6">
-          <label htmlFor="showStaff" className="text-slate-700">
+        <div className="flex items-center justify-between gap-6 py-2.5">
+          <label htmlFor="showStaff" className="text-ink-700 text-[0.95rem]">
             Show Staff Display
           </label>
           <Toggle
@@ -87,8 +91,8 @@ export function SettingsPanel({
         </div>
 
         {/* Use Microphone */}
-        <div className="flex items-center justify-between gap-6">
-          <label htmlFor="mic" className="text-slate-700">
+        <div className="flex items-center justify-between gap-6 py-2.5">
+          <label htmlFor="mic" className="text-ink-700 text-[0.95rem]">
             Use Microphone
           </label>
           <Toggle
@@ -99,7 +103,7 @@ export function SettingsPanel({
           />
         </div>
         {micError && (
-          <p className="text-sm text-red-500 mt-1">{micError}</p>
+          <p className="text-sm text-felt-600 pt-2.5">{micError}</p>
         )}
       </div>
     </div>
