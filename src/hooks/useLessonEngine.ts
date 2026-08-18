@@ -111,6 +111,7 @@ export function useLessonEngine(): UseLessonEngineReturn {
       // Try to play with retries while audio loads
       let attempts = 0;
       const maxAttempts = 10;
+      let retryTimer: ReturnType<typeof setTimeout>;
       const tryPlay = () => {
         const ready = checkAudioReady();
         console.log('[LessonEngine] tryPlay attempt', attempts, 'audioReady:', ready);
@@ -118,12 +119,17 @@ export function useLessonEngine(): UseLessonEngineReturn {
           playNoteRaw(currentNote);
         } else if (attempts < maxAttempts) {
           attempts++;
-          setTimeout(tryPlay, 200);
+          retryTimer = setTimeout(tryPlay, 200);
         } else {
           console.log('[LessonEngine] Max attempts reached, audio still not ready');
         }
       };
-      setTimeout(tryPlay, 100);
+      retryTimer = setTimeout(tryPlay, 100);
+      // The chain must die with its selection. Left running, it played ghost
+      // notes after the lesson screen unmounted (a note picked by the advance
+      // timer during the exit transition sounded on the analytics screen), and
+      // stale chains played superseded notes once samples finished loading.
+      return () => clearTimeout(retryTimer);
     }
   }, [currentNote, noteSelectionId, audioEnabled]);
 

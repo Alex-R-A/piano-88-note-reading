@@ -134,7 +134,8 @@ describe('useMicInput', () => {
       await result.current.startMic();
     });
 
-    // Advance performance.now past calibration
+    // Measure one frame, then advance performance.now past calibration
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
 
@@ -323,10 +324,15 @@ describe('useMicInput', () => {
     act(() => tickFrames(2));
     expect(result.current.micState).toBe('calibrating');
 
-    // Once the app goes quiet, the real room level is measured.
+    // Once the app goes quiet, measurement begins; a full window of real
+    // frames is still required before the mic goes live.
     vi.spyOn(performance, 'now').mockReturnValue(2100);
     fillBufferWithRMS(0.001);
     act(() => tickFrames(2));
+    expect(result.current.micState).toBe('calibrating');
+
+    vi.spyOn(performance, 'now').mockReturnValue(3200);
+    act(() => tickFrames(1));
     expect(result.current.micState).toBe('listening');
 
     mockFindPitchResult = [440, 0.95];
@@ -415,6 +421,7 @@ describe('useMicInput', () => {
     });
 
     fillBufferWithRMS(0.01);
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
 
@@ -435,6 +442,7 @@ describe('useMicInput', () => {
     });
 
     fillBufferWithRMS(0.01);
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
 
@@ -455,6 +463,7 @@ describe('useMicInput', () => {
     });
 
     fillBufferWithRMS(0.01);
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
 
@@ -477,6 +486,7 @@ describe('useMicInput', () => {
     });
 
     fillBufferWithRMS(0.01);
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
 
@@ -507,6 +517,7 @@ describe('useMicInput', () => {
     });
 
     fillBufferWithRMS(0.01);
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
 
@@ -537,6 +548,7 @@ describe('useMicInput', () => {
 
     // Calibrate
     fillBufferWithRMS(0.01);
+    act(() => tickFrames(1));
     vi.spyOn(performance, 'now').mockReturnValue(1100);
     act(() => tickFrames(1));
     expect(result.current.micState).toBe('listening');
@@ -587,5 +599,78 @@ describe('useMicInput', () => {
 
     expect(mockStreamTracks[0].stop).toHaveBeenCalled();
     expect(mockAudioContextClosed).toBe(true);
+  });
+
+  it('stops the stream when unmounted while the permission request is pending', async () => {
+    // The failure this covers: the stream arrived after cleanup already ran,
+    // so the mic stayed captured forever and a detection loop kept running
+    // against the unmounted component.
+    let resolveGetUserMedia!: (value: unknown) => void;
+    (navigator.mediaDevices.getUserMedia as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveGetUserMedia = resolve;
+        }),
+    );
+
+    const onNote = vi.fn();
+    const { result, unmount } = renderHook(() => useMicInput(onNote));
+
+    let startPromise!: Promise<void>;
+    act(() => {
+      startPromise = result.current.startMic();
+    });
+
+    unmount();
+
+    const track = { stop: vi.fn() };
+    await act(async () => {
+      resolveGetUserMedia({ getTracks: () => [track] });
+      await startPromise;
+    });
+
+    expect(track.stop).toHaveBeenCalled();
+    expect(requestAnimationFrame).not.toHaveBeenCalled();
+
+    // No zombie detection either.
+    vi.spyOn(performance, 'now').mockReturnValue(1100);
+    fillBufferWithRMS(0.5);
+    tickFrames(5);
+    expect(onNote).not.toHaveBeenCalled();
+  });
+
+  it('does not end calibration on the first frame after a long suppression', async () => {
+    // The failure this covers: lesson start suppresses for 2s, longer than the
+    // 1s calibration window, so the first unsuppressed frame used to satisfy
+    // "elapsed >= duration" on its own and the floor became a median of one
+    // sample. A transient on that frame deafened the mic to quiet playing.
+    const onNote = vi.fn();
+    const { result } = renderHook(() => useMicInput(onNote));
+
+    await act(async () => {
+      await result.current.startMic();
+    });
+    act(() => result.current.suppressDetection(2000));
+
+    // A transient hits the very first unsuppressed frame.
+    vi.spyOn(performance, 'now').mockReturnValue(2050);
+    fillBufferWithRMS(0.5);
+    act(() => tickFrames(1));
+    expect(result.current.micState).toBe('calibrating');
+
+    // The rest of the window is quiet room; the median ignores the transient.
+    vi.spyOn(performance, 'now').mockReturnValue(2100);
+    fillBufferWithRMS(0.001);
+    act(() => tickFrames(4));
+    vi.spyOn(performance, 'now').mockReturnValue(3100);
+    act(() => tickFrames(1));
+    expect(result.current.micState).toBe('listening');
+
+    // A quiet note that a one-transient floor would have drowned out is heard.
+    vi.spyOn(performance, 'now').mockReturnValue(3300);
+    fillBufferWithRMS(0.015);
+    mockFindPitchResult = [440, 0.95];
+    act(() => tickFrames(3));
+    expect(onNote).toHaveBeenCalledWith('A');
   });
 });

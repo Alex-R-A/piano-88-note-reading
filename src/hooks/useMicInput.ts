@@ -93,7 +93,16 @@ export function useMicInput(
 
   const calibrationSamplesRef = useRef<number[]>([]);
   const calibrationStartRef = useRef(0);
+  const measureStartRef = useRef(0);
   const detectedHoldUntilRef = useRef(0);
+
+  // Bumped by every cleanup(). startMic captures the value after its own
+  // cleanup and compares after each await: a mismatch means the mic was
+  // stopped, restarted, or unmounted while the call was suspended, and the
+  // continuation must not revive it. Without this, leaving the lesson while
+  // the permission prompt was open left the stream captured forever and a
+  // detection loop running against an unmounted component.
+  const generationRef = useRef(0);
 
   const onNoteDetectedRef = useRef(onNoteDetected);
   const micStateRef = useRef<MicState>('idle');
@@ -103,6 +112,7 @@ export function useMicInput(
   }, [onNoteDetected]);
 
   const cleanup = useCallback(() => {
+    generationRef.current += 1;
     if (rafIdRef.current !== null) {
       cancelAnimationFrame(rafIdRef.current);
       rafIdRef.current = null;
@@ -150,15 +160,24 @@ export function useMicInput(
 
     if (micStateRef.current === 'calibrating') {
       const now = performance.now();
-      const elapsed = now - calibrationStartRef.current;
       // Do not measure while the app is making noise of its own; the first note
       // of a lesson is played within this window.
       if (now >= suppressUntilRef.current) {
+        // Time the window from the first measured frame, not from startMic.
+        // Suppression routinely outlasts the nominal window (lesson start
+        // suppresses for 2s), and timing from startMic ended calibration on
+        // the first unsuppressed frame: a median of one sample, which a
+        // single transient could set.
+        if (calibrationSamplesRef.current.length === 0) {
+          measureStartRef.current = now;
+        }
         calibrationSamplesRef.current.push(rms);
       }
       const samples = calibrationSamplesRef.current;
-      const measured = elapsed >= CALIBRATION_DURATION_MS && samples.length > 0;
-      if (measured || elapsed >= CALIBRATION_TIMEOUT_MS) {
+      const measured =
+        samples.length > 0 &&
+        now - measureStartRef.current >= CALIBRATION_DURATION_MS;
+      if (measured || now - calibrationStartRef.current >= CALIBRATION_TIMEOUT_MS) {
         noiseFloorRef.current = samples.length
           ? Math.min(
               Math.max(median(samples) * NOISE_FLOOR_MULTIPLIER, NOISE_FLOOR_MIN),
@@ -223,6 +242,7 @@ export function useMicInput(
   const startMic = useCallback(async () => {
     cleanup();
     setErrorMessage(null);
+    const generation = generationRef.current;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -232,6 +252,13 @@ export function useMicInput(
           autoGainControl: false,
         },
       });
+      if (generation !== generationRef.current) {
+        // The mic was stopped while the permission request was pending. The
+        // stream arrived after cleanup already ran, so nothing else will ever
+        // release it.
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       mediaStreamRef.current = stream;
 
       const ctx = new AudioContext();
@@ -241,6 +268,11 @@ export function useMicInput(
       // listening while hearing nothing.
       if (ctx.state === 'suspended') {
         await ctx.resume();
+        if (generation !== generationRef.current) {
+          // cleanup ran during resume; it already stopped the stream and
+          // closed the context.
+          return;
+        }
       }
 
       const source = ctx.createMediaStreamSource(stream);
@@ -268,6 +300,11 @@ export function useMicInput(
 
       rafIdRef.current = requestAnimationFrame(detectionLoop);
     } catch (err) {
+      if (generation !== generationRef.current) {
+        // A newer start/stop owns the mic state; a stale failure must not
+        // overwrite it with an error.
+        return;
+      }
       cleanup();
       micStateRef.current = 'error';
       setMicState('error');
