@@ -1,6 +1,6 @@
 // components/LessonScreen/StaffDisplay.tsx
 import { useRef } from 'react';
-import { useVexFlow } from '@/hooks';
+import { useVexFlow, STAFF_ASPECT_RATIO } from '@/hooks';
 import { getClefForNote } from '@/utils/noteUtils';
 import type { NoteId } from '@/types';
 
@@ -30,7 +30,11 @@ export function StaffDisplay({ noteId }: StaffDisplayProps) {
     <div className="flex items-center justify-center">
       <div
         ref={containerRef}
-        style={{ width: 500, height: 660 }}
+        style={{
+          height: 'min(660px, 40vh)',
+          aspectRatio: STAFF_ASPECT_RATIO,
+          maxWidth: '100%',
+        }}
         aria-label={noteId ? `Musical staff showing note ${noteId}` : 'Empty musical staff'}
       />
     </div>

@@ -9,7 +9,7 @@ export {
 } from './useLessonEngine';
 export type { UseLessonEngineReturn, LessonEngineStats } from './useLessonEngine';
 
-export { useVexFlow } from './useVexFlow';
+export { useVexFlow, STAFF_ASPECT_RATIO } from './useVexFlow';
 
 export { useAudio, useAudioCleanup } from './useAudio';
 export type { UseAudioReturn } from './useAudio';

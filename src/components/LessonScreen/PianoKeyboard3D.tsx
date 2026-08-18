@@ -158,9 +158,18 @@ export function PianoKeyboard3D({
   highlightedKey,
 }: PianoKeyboard3DProps) {
   return (
+    // Sized by height with a locked 3:1 aspect, so the instrument scales to the
+    // viewport instead of forcing a fixed 1800px that overflowed every display
+    // narrower than that and pushed the stop button below the fold. The camera
+    // has a fixed vertical fov, so scaling the canvas proportionally scales the
+    // whole scene rather than cropping it.
     <div
       className="rounded-lg overflow-hidden mx-auto"
-      style={{ width: 1800, height: 600 }}
+      style={{
+        height: 'min(600px, 42vh)',
+        aspectRatio: '3 / 1',
+        maxWidth: '100%',
+      }}
     >
       <WebGLErrorBoundary>
         <Canvas
