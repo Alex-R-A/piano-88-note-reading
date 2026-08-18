@@ -8,7 +8,6 @@ import {
   isBlackKey,
   getClefForNote,
   generateNoteSet,
-  getWhiteKeyProfile,
 } from './noteUtils';
 
 describe('parseNote', () => {
@@ -281,10 +280,12 @@ describe('generateNoteSet', () => {
 
     it('generates correct notes for octave 0 with accidentals', () => {
       const notes = generateNoteSet([0], true);
-      expect(notes).toHaveLength(3);
+      expect(notes).toHaveLength(4);
       expect(notes).toContain('A0');
-      expect(notes).toContain('Bb0');
       expect(notes).toContain('B0');
+      // Both spellings of the one black key, matching every other octave.
+      expect(notes).toContain('A#0');
+      expect(notes).toContain('Bb0');
     });
 
     it('generates correct notes for octave 8 (no accidentals, just C8)', () => {
@@ -300,20 +301,3 @@ describe('generateNoteSet', () => {
   });
 });
 
-describe('getWhiteKeyProfile', () => {
-  it('returns type1 for C and F (notch on right)', () => {
-    expect(getWhiteKeyProfile('C')).toBe('type1');
-    expect(getWhiteKeyProfile('F')).toBe('type1');
-  });
-
-  it('returns type2 for D, G, A (notches on both sides)', () => {
-    expect(getWhiteKeyProfile('D')).toBe('type2');
-    expect(getWhiteKeyProfile('G')).toBe('type2');
-    expect(getWhiteKeyProfile('A')).toBe('type2');
-  });
-
-  it('returns type3 for E and B (notch on left)', () => {
-    expect(getWhiteKeyProfile('E')).toBe('type3');
-    expect(getWhiteKeyProfile('B')).toBe('type3');
-  });
-});

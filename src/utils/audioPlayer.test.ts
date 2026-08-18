@@ -107,31 +107,31 @@ describe('audioPlayer', () => {
       await initAudio();
       playNote('C4');
 
-      expect(mockStart).toHaveBeenCalledWith({ note: 'C4' });
+      expect(mockStart).toHaveBeenCalledWith({ note: 'C4', duration: 0.5 });
     });
 
     it('plays notes with sharps', async () => {
       await initAudio();
       playNote('C#4');
 
-      expect(mockStart).toHaveBeenCalledWith({ note: 'C#4' });
+      expect(mockStart).toHaveBeenCalledWith({ note: 'C#4', duration: 0.5 });
     });
 
     it('plays notes with flats', async () => {
       await initAudio();
       playNote('Bb3');
 
-      expect(mockStart).toHaveBeenCalledWith({ note: 'Bb3' });
+      expect(mockStart).toHaveBeenCalledWith({ note: 'Bb3', duration: 0.5 });
     });
 
     it('handles different octaves', async () => {
       await initAudio();
 
       playNote('A0');
-      expect(mockStart).toHaveBeenCalledWith({ note: 'A0' });
+      expect(mockStart).toHaveBeenCalledWith({ note: 'A0', duration: 0.5 });
 
       playNote('C8');
-      expect(mockStart).toHaveBeenCalledWith({ note: 'C8' });
+      expect(mockStart).toHaveBeenCalledWith({ note: 'C8', duration: 0.5 });
     });
   });
 

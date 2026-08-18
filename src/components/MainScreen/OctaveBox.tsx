@@ -95,8 +95,12 @@ export function OctaveBox({ octave, checked, onToggle }: OctaveBoxProps) {
           ? 'bg-brass-100 ring-1 ring-brass-500 shadow-lift'
           : 'bg-ivory-50 ring-1 ring-ink-200 hover:ring-brass-300 hover:shadow-card'
       }`}
+      // These are independent multi-select options, not a toggle button, so
+      // they expose the checkbox role. A button element keeps Enter and Space
+      // working without reimplementing them.
+      role="checkbox"
       aria-label={`Select octave ${octave}`}
-      aria-pressed={checked}
+      aria-checked={checked}
     >
       <div
         className={`mb-1.5 font-display text-sm font-semibold tracking-wide transition-colors ${

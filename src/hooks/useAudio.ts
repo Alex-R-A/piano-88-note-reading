@@ -10,7 +10,6 @@ import {
   resumeAudioContext,
   isAudioReady,
   isAudioLoading,
-  disposeAudio,
 } from '@/utils/audioPlayer';
 import type { NoteId } from '@/types';
 
@@ -111,14 +110,3 @@ export function useAudio(): UseAudioReturn {
   };
 }
 
-/**
- * Cleanup hook for disposing audio resources.
- * Use in App component or lesson screen cleanup.
- */
-export function useAudioCleanup(): void {
-  useEffect(() => {
-    return () => {
-      disposeAudio();
-    };
-  }, []);
-}

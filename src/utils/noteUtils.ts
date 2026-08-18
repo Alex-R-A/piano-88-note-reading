@@ -1,6 +1,6 @@
 // utils/noteUtils.ts
 
-import type { Note, NoteLetter, NoteId, PitchClass, Clef, WhiteKeyProfile, Accidental } from '@/types';
+import type { Note, NoteLetter, NoteId, PitchClass, Clef, Accidental } from '@/types';
 
 // Enharmonic equivalents mapping: pitch class -> normalized key position (0-11)
 const PITCH_CLASS_TO_POSITION: Record<string, number> = {
@@ -139,7 +139,8 @@ export function generateNoteSet(
       // Octave 0 only has A, Bb, B
       notes.push('A0', 'B0');
       if (includeSharpsFlats) {
-        notes.push('Bb0'); // Only flat between A and B
+        // Both spellings of the single black key, as every other octave gets.
+        notes.push('A#0', 'Bb0');
       }
     } else if (octave === 8) {
       // Octave 8 only has C
@@ -165,27 +166,3 @@ export function generateNoteSet(
   return notes;
 }
 
-/**
- * Get the white key profile type for a given letter
- * C, F -> 'type1' (notch on right only)
- * D, G, A -> 'type2' (notches on both sides)
- * E, B -> 'type3' (notch on left only)
- */
-export function getWhiteKeyProfile(letter: NoteLetter): WhiteKeyProfile {
-  switch (letter) {
-    case 'C':
-    case 'F':
-      return 'type1';
-    case 'D':
-    case 'G':
-    case 'A':
-      return 'type2';
-    case 'E':
-    case 'B':
-      return 'type3';
-    default:
-      // TypeScript exhaustiveness check
-      const _exhaustiveCheck: never = letter;
-      throw new Error(`Unknown letter: ${_exhaustiveCheck}`);
-  }
-}

@@ -17,9 +17,20 @@ vi.mock('vexflow', () => {
     draw: vi.fn().mockReturnThis(),
   }));
 
-  const MockStaveNote = vi.fn().mockImplementation(() => ({
-    addModifier: vi.fn().mockReturnThis(),
-  }));
+  const MockStaveNote = vi.fn().mockImplementation(() => {
+    // The hook nudges the note via its TickContext so the accidental travels
+    // with the notehead. Real StaveNote inherits this from Tickable.
+    let x = 0;
+    return {
+      addModifier: vi.fn().mockReturnThis(),
+      getTickContext: vi.fn(() => ({
+        getX: () => x,
+        setX: (next: number) => {
+          x = next;
+        },
+      })),
+    };
+  });
 
   const MockVoice = vi.fn().mockImplementation(() => ({
     addTickable: vi.fn().mockReturnThis(),
@@ -70,13 +81,6 @@ describe('StaffDisplay', () => {
     expect(container).toBeInTheDocument();
   });
 
-  it('renders with correct container dimensions', () => {
-    render(<StaffDisplay noteId="C4" />);
-
-    const container = screen.getByLabelText('Musical staff showing note C4');
-    expect(container).toHaveStyle({ width: '400px', height: '150px' });
-  });
-
   it('renders notes with sharps correctly', () => {
     render(<StaffDisplay noteId="F#4" />);
 
@@ -91,11 +95,16 @@ describe('StaffDisplay', () => {
     expect(container).toBeInTheDocument();
   });
 
-  it('applies appropriate container classes', () => {
+  it('sizes the staff responsively rather than at a fixed pixel size', () => {
+    // The staff used to be pinned at 500x660, which forced the lesson screen
+    // taller than a laptop viewport. It is now sized by a capped height with
+    // the aspect ratio carrying the width.
     render(<StaffDisplay noteId="C4" />);
 
     const container = screen.getByLabelText('Musical staff showing note C4');
-    expect(container).toHaveClass('bg-white', 'rounded-lg', 'shadow-md');
+    expect(container).toHaveStyle({ height: 'min(660px, 40vh)' });
+    expect(container.style.aspectRatio).not.toBe('');
+    expect(container).toHaveStyle({ maxWidth: '100%' });
   });
 });
 

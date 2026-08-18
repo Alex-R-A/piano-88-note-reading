@@ -4,17 +4,17 @@ import * as THREE from 'three';
 // Key dimensions (relative units). Ratios follow a real keyboard: an octave
 // spans 7 white keys, a white key is ~23.5mm wide, a black key ~13.7mm.
 export const WHITE_KEY_WIDTH = 1;
-export const WHITE_KEY_LENGTH = 5;
+const WHITE_KEY_LENGTH = 5;
 export const WHITE_KEY_HEIGHT = 0.62;
-export const BLACK_KEY_WIDTH = 0.58;
-export const BLACK_KEY_LENGTH = 3;
-export const BLACK_KEY_HEIGHT = 0.52;
+const BLACK_KEY_WIDTH = 0.58;
+const BLACK_KEY_LENGTH = 3;
+const BLACK_KEY_HEIGHT = 0.52;
 
 // Gap between adjacent keys.
-export const KEY_GAP = 0.045;
+const KEY_GAP = 0.045;
 
 // Front section of a white key, ahead of the black keys, at full width.
-export const WHITE_KEY_HEAD_LENGTH =
+const WHITE_KEY_HEAD_LENGTH =
   WHITE_KEY_LENGTH - BLACK_KEY_LENGTH - KEY_GAP;
 
 // Black keys sit on top of the white keys, back edges flush.

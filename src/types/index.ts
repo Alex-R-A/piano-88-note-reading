@@ -54,5 +54,3 @@ export interface LessonState {
 // Screen routing
 export type Screen = 'main' | 'lesson' | 'analytics';
 
-// White key profile types
-export type WhiteKeyProfile = 'type1' | 'type2' | 'type3';

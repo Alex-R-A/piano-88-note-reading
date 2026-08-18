@@ -37,6 +37,12 @@ const NOISE_FLOOR_MIN = 0.004;
 // measure well above this, and the clarity gate is what actually rejects noise.
 const NOISE_FLOOR_MAX = 0.02;
 
+// How long a detected pitch stays on screen. Detection emits a note, which
+// starts feedback, which suppresses detection, which cleared the readout on the
+// very next frame -- so it never survived to paint. Holding it briefly is what
+// makes the indicator visible at all.
+const DETECTED_PITCH_HOLD_MS = 900;
+
 const NOTE_NAMES: PitchClass[] = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
 ];
@@ -87,6 +93,7 @@ export function useMicInput(
 
   const calibrationSamplesRef = useRef<number[]>([]);
   const calibrationStartRef = useRef(0);
+  const detectedHoldUntilRef = useRef(0);
 
   const onNoteDetectedRef = useRef(onNoteDetected);
   const micStateRef = useRef<MicState>('idle');
@@ -117,6 +124,7 @@ export function useMicInput(
     cooldownUntilRef.current = 0;
     calibrationSamplesRef.current = [];
     suppressUntilRef.current = 0;
+    detectedHoldUntilRef.current = 0;
   }, []);
 
   const detectionLoop = useCallback(() => {
@@ -126,6 +134,16 @@ export function useMicInput(
     const ctx = audioContextRef.current;
 
     if (!analyser || !detector || !buffer || !ctx) return;
+
+    const clearDetectedPitchAfterHold = () => {
+      if (
+        lastDetectedPitchRef.current !== null &&
+        performance.now() >= detectedHoldUntilRef.current
+      ) {
+        lastDetectedPitchRef.current = null;
+        setDetectedPitch(null);
+      }
+    };
 
     analyser.getFloatTimeDomainData(buffer);
     const rms = calculateRMS(buffer);
@@ -153,27 +171,18 @@ export function useMicInput(
     } else if (micStateRef.current === 'listening') {
       if (performance.now() < suppressUntilRef.current) {
         stabilityBufferRef.current = [];
-        if (lastDetectedPitchRef.current !== null) {
-          lastDetectedPitchRef.current = null;
-          setDetectedPitch(null);
-        }
+        clearDetectedPitchAfterHold();
         rafIdRef.current = requestAnimationFrame(detectionLoop);
         return;
       }
       if (rms < noiseFloorRef.current) {
         stabilityBufferRef.current = [];
-        if (lastDetectedPitchRef.current !== null) {
-          lastDetectedPitchRef.current = null;
-          setDetectedPitch(null);
-        }
+        clearDetectedPitchAfterHold();
       } else {
         const [freq, clarity] = detector.findPitch(buffer, ctx.sampleRate);
         if (clarity < CLARITY_THRESHOLD) {
           stabilityBufferRef.current = [];
-          if (lastDetectedPitchRef.current !== null) {
-            lastDetectedPitchRef.current = null;
-            setDetectedPitch(null);
-          }
+          clearDetectedPitchAfterHold();
         } else {
           const pitchClass = frequencyToPitchClass(freq);
           if (pitchClass === null) {
@@ -181,6 +190,8 @@ export function useMicInput(
             rafIdRef.current = requestAnimationFrame(detectionLoop);
             return;
           }
+          detectedHoldUntilRef.current =
+            performance.now() + DETECTED_PITCH_HOLD_MS;
           if (lastDetectedPitchRef.current !== pitchClass) {
             lastDetectedPitchRef.current = pitchClass;
             setDetectedPitch(pitchClass);
@@ -278,6 +289,7 @@ export function useMicInput(
 
   const stopMic = useCallback(() => {
     cleanup();
+    detectedHoldUntilRef.current = 0;
     micStateRef.current = 'idle';
     setMicState('idle');
     setErrorMessage(null);
