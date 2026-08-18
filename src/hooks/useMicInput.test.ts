@@ -497,13 +497,18 @@ describe('useMicInput', () => {
     act(() => tickFrames(3));
     expect(onNote).toHaveBeenCalledTimes(1);
 
-    // Same note within cooldown (< 300ms later)
+    // Same sustained note within cooldown (< 300ms later)
     vi.spyOn(performance, 'now').mockReturnValue(1400);
     act(() => tickFrames(3));
     expect(onNote).toHaveBeenCalledTimes(1); // Still 1
 
-    // Same note after cooldown
+    // Re-emitting after cooldown requires a fresh strike (onset), not just a
+    // sustained signal: drop to silence, then strike again.
+    fillBufferWithRMS(0.001);
     vi.spyOn(performance, 'now').mockReturnValue(1600);
+    act(() => tickFrames(2));
+    fillBufferWithRMS(0.5);
+    vi.spyOn(performance, 'now').mockReturnValue(1800);
     act(() => tickFrames(3));
     expect(onNote).toHaveBeenCalledTimes(2);
   });
@@ -528,9 +533,14 @@ describe('useMicInput', () => {
     act(() => tickFrames(3));
     expect(onNote).toHaveBeenCalledWith('A');
 
-    // Different note: C (within cooldown window of A)
+    // Different note: C, struck within A's cooldown window (until 1500).
+    // A fresh strike on another key must emit despite the cooldown.
+    fillBufferWithRMS(0.001);
+    vi.spyOn(performance, 'now').mockReturnValue(1300);
+    act(() => tickFrames(2));
     mockFindPitchResult = [261.63, 0.95];
-    vi.spyOn(performance, 'now').mockReturnValue(1250);
+    fillBufferWithRMS(0.5);
+    vi.spyOn(performance, 'now').mockReturnValue(1480);
     act(() => tickFrames(3));
     expect(onNote).toHaveBeenCalledWith('C');
     expect(onNote).toHaveBeenCalledTimes(2);
@@ -564,8 +574,12 @@ describe('useMicInput', () => {
     act(() => tickFrames(5));
     expect(onNote).not.toHaveBeenCalled();
 
-    // After suppression expires
+    // After suppression expires, a fresh strike emits.
+    fillBufferWithRMS(0.001);
     vi.spyOn(performance, 'now').mockReturnValue(3300);
+    act(() => tickFrames(2));
+    fillBufferWithRMS(0.5);
+    vi.spyOn(performance, 'now').mockReturnValue(3500);
     act(() => tickFrames(3));
     expect(onNote).toHaveBeenCalledWith('A');
   });

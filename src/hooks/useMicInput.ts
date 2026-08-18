@@ -43,6 +43,19 @@ const NOISE_FLOOR_MAX = 0.02;
 // makes the indicator visible at all.
 const DETECTED_PITCH_HOLD_MS = 900;
 
+// Onset gating. Emitting a note requires a recent attack: RMS must rise
+// sharply over its level ONSET_BASELINE_MS earlier, which opens a short
+// emission window. Without this, any steady or slowly-decaying signal that
+// clears the floor and the clarity gate kept answering questions: mains hum
+// emitted continuously, and one piano strike re-emitted every ~350ms for as
+// long as it rang (a ringing previous answer could answer the next question).
+// The window is opened on the rising EDGE only, so one attack cannot re-open
+// it after its emission, and it closes when a note is emitted.
+const ONSET_RATIO = 1.5;
+const ONSET_BASELINE_MS = 180;
+const ONSET_WINDOW_MS = 600;
+const RMS_HISTORY_MS = 400;
+
 const NOTE_NAMES: PitchClass[] = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
 ];
@@ -90,6 +103,9 @@ export function useMicInput(
   const lastEmittedRef = useRef<PitchClass | null>(null);
   const cooldownUntilRef = useRef(0);
   const suppressUntilRef = useRef(0);
+  const rmsHistoryRef = useRef<Array<{ t: number; rms: number }>>([]);
+  const onsetWindowUntilRef = useRef(0);
+  const onsetRisingRef = useRef(false);
 
   const calibrationSamplesRef = useRef<number[]>([]);
   const calibrationStartRef = useRef(0);
@@ -135,6 +151,9 @@ export function useMicInput(
     calibrationSamplesRef.current = [];
     suppressUntilRef.current = 0;
     detectedHoldUntilRef.current = 0;
+    rmsHistoryRef.current = [];
+    onsetWindowUntilRef.current = 0;
+    onsetRisingRef.current = false;
   }, []);
 
   const detectionLoop = useCallback(() => {
@@ -188,7 +207,32 @@ export function useMicInput(
         setMicState('listening');
       }
     } else if (micStateRef.current === 'listening') {
-      if (performance.now() < suppressUntilRef.current) {
+      const now = performance.now();
+
+      // Onset tracking runs on every listening frame, suppressed ones
+      // included: the baseline must keep following the signal so the ring of
+      // the app's own playback does not read as a fresh attack the moment
+      // suppression ends, and a note struck during a suppression tail still
+      // opens a window that can outlive it.
+      const history = rmsHistoryRef.current;
+      let baseline = 0;
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].t <= now - ONSET_BASELINE_MS) {
+          baseline = history[i].rms;
+          break;
+        }
+      }
+      history.push({ t: now, rms });
+      while (history.length > 0 && history[0].t < now - RMS_HISTORY_MS) {
+        history.shift();
+      }
+      const rising = rms >= noiseFloorRef.current && rms > baseline * ONSET_RATIO;
+      if (rising && !onsetRisingRef.current) {
+        onsetWindowUntilRef.current = now + ONSET_WINDOW_MS;
+      }
+      onsetRisingRef.current = rising;
+
+      if (now < suppressUntilRef.current) {
         stabilityBufferRef.current = [];
         clearDetectedPitchAfterHold();
         rafIdRef.current = requestAnimationFrame(detectionLoop);
@@ -221,14 +265,19 @@ export function useMicInput(
             sb.shift();
           }
           if (sb.length === CONSECUTIVE_FRAMES_REQUIRED && sb.every((n) => n === sb[0])) {
-            const now = performance.now();
-            if (pitchClass === lastEmittedRef.current && now < cooldownUntilRef.current) {
+            if (now >= onsetWindowUntilRef.current) {
+              // Stable pitch with no recent attack: steady hum, or the ring
+              // of a note already answered. Wait for a fresh strike.
+              stabilityBufferRef.current = [];
+            } else if (pitchClass === lastEmittedRef.current && now < cooldownUntilRef.current) {
               // Same note within cooldown, reset buffer to require fresh detection after cooldown
               stabilityBufferRef.current = [];
             } else {
               onNoteDetectedRef.current(pitchClass);
               lastEmittedRef.current = pitchClass;
               cooldownUntilRef.current = now + COOLDOWN_MS;
+              // One emission per attack; the next needs a new onset.
+              onsetWindowUntilRef.current = 0;
               stabilityBufferRef.current = [];
             }
           }
