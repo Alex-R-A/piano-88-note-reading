@@ -149,11 +149,23 @@ export const useLessonStore = create<LessonStore>((set, get) => ({
     const newStatsMap = new Map(state.stats);
     newStatsMap.set(note, newStats);
 
-    // Update error weights for wrong answers
+    // Update error weights.
+    //
+    // The weight is how much extra practice this note currently needs, so a
+    // correct answer pays one back. Incrementing only would make it a record of
+    // every note ever missed: mistakes made in the first minute would keep
+    // buying extra turns for the rest of the session, crowding out notes still
+    // being learned, long after the note itself was mastered.
     const newErrorWeights = new Map(state.errorWeights);
+    const currentWeight = newErrorWeights.get(note) ?? 0;
     if (!isCorrect) {
-      const currentWeight = newErrorWeights.get(note) || 0;
       newErrorWeights.set(note, currentWeight + 1);
+    } else if (currentWeight > 1) {
+      newErrorWeights.set(note, currentWeight - 1);
+    } else if (currentWeight === 1) {
+      // Cleared. Drop the entry rather than leaving a zero behind, so the note
+      // stops being added to the candidate pool at all.
+      newErrorWeights.delete(note);
     }
 
     // Update remaining notes

@@ -154,6 +154,57 @@ describe('lessonStore', () => {
       expect(useLessonStore.getState().errorWeights.get('C4')).toBe(3);
     });
 
+    it('decrements error weight on a correct answer', () => {
+      // Weight is "extra practice still owed", not "mistakes ever made", so
+      // getting the note right has to pay some of it back.
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('D');
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('E');
+      expect(useLessonStore.getState().errorWeights.get('C4')).toBe(2);
+
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('C');
+
+      expect(useLessonStore.getState().errorWeights.get('C4')).toBe(1);
+    });
+
+    it('clears the entry once the last error is paid back', () => {
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('D');
+      expect(useLessonStore.getState().errorWeights.get('C4')).toBe(1);
+
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('C');
+
+      // Deleted rather than left at 0, so it stops being added to the pool.
+      expect(useLessonStore.getState().errorWeights.has('C4')).toBe(false);
+    });
+
+    it('does not drive error weight below zero', () => {
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('C');
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('C');
+
+      expect(useLessonStore.getState().errorWeights.get('C4')).toBeUndefined();
+      expect(useLessonStore.getState().errorWeights.size).toBe(0);
+    });
+
+    it('only pays back the note that was answered', () => {
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('D');
+      useLessonStore.setState({ currentNote: 'E4' });
+      useLessonStore.getState().processAnswer('F');
+
+      // Answering C4 correctly must not touch E4's weight.
+      useLessonStore.setState({ currentNote: 'C4' });
+      useLessonStore.getState().processAnswer('C');
+
+      expect(useLessonStore.getState().errorWeights.has('C4')).toBe(false);
+      expect(useLessonStore.getState().errorWeights.get('E4')).toBe(1);
+    });
+
     it('removes note from remainingNotes', () => {
       useLessonStore.setState({ currentNote: 'C4' });
       useLessonStore.getState().processAnswer('C');
