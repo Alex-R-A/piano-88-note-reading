@@ -162,6 +162,30 @@ describe('StatsTable', () => {
       const row = screen.getByTestId('stats-row-E4');
       expect(row).toHaveClass('bg-emerald-50');
     });
+
+    it('should color by the displayed (rounded) accuracy at band boundaries', () => {
+      // 101/250 = 40.4%, displayed as "40%", which the 0-40 band says is red.
+      // Coloring the unrounded value put a row reading "40%" on amber.
+      const perNote = [{ noteId: 'F4', stats: { shown: 250, correct: 101 } }];
+
+      render(<StatsTable perNote={perNote} />);
+
+      const row = screen.getByTestId('stats-row-F4');
+      expect(within(row).getByText('40%')).toBeInTheDocument();
+      expect(row).toHaveClass('bg-red-50');
+    });
+  });
+
+  describe('accuracy bar', () => {
+    it('renders a bar whose fill width matches the accuracy', () => {
+      const perNote = [{ noteId: 'G4', stats: { shown: 4, correct: 3 } }]; // 75%
+
+      render(<StatsTable perNote={perNote} />);
+
+      const bar = screen.getByTestId('accuracy-bar-G4');
+      const fill = bar.firstElementChild as HTMLElement;
+      expect(fill.style.width).toBe('75%');
+    });
   });
 
   describe('renders all practiced notes', () => {

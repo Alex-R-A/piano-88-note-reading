@@ -25,6 +25,8 @@ function getAccuracy(stats: NoteStats): number {
  * - 0-40%: red
  * - 41-70%: yellow
  * - 71-100%: green
+ * Callers pass the ROUNDED display value, so the color band always agrees
+ * with the percentage the user reads (40.4% shows "40%" and must be red).
  */
 function getRowColor(accuracy: number): string {
   if (accuracy <= 40) return 'bg-red-50';
@@ -66,7 +68,7 @@ export function StatsTable({ perNote }: StatsTableProps) {
           {sortedStats.map(({ noteId, stats }) => {
             const accuracy = getAccuracy(stats);
             const roundedAccuracy = Math.round(accuracy);
-            const bgColor = getRowColor(accuracy);
+            const bgColor = getRowColor(roundedAccuracy);
             const octave = parseNote(noteId).octave;
             const pitchClass = extractPitchClass(noteId);
 
@@ -81,7 +83,21 @@ export function StatsTable({ perNote }: StatsTableProps) {
                 <td className="px-4 py-3 text-center text-ink-600">{stats.shown}</td>
                 <td className="px-4 py-3 text-center text-emerald-700">{stats.correct}</td>
                 <td className="px-4 py-3 text-center text-felt-600">{stats.shown - stats.correct}</td>
-                <td className="px-4 py-3 text-center text-ink-800 font-medium">{roundedAccuracy}%</td>
+                <td className="px-4 py-3 text-ink-800 font-medium">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="w-10 text-right">{roundedAccuracy}%</span>
+                    <div
+                      className="h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-ink-100"
+                      data-testid={`accuracy-bar-${noteId}`}
+                      aria-hidden="true"
+                    >
+                      <div
+                        className="h-full rounded-full bg-brass-500"
+                        style={{ width: `${accuracy}%` }}
+                      />
+                    </div>
+                  </div>
+                </td>
               </tr>
             );
           })}

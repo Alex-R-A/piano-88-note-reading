@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { useAudio } from '@/hooks/useAudio';
+import { useAudio, type AudioStatus } from '@/hooks/useAudio';
 import { generateNoteSet, extractPitchClass, parseNote } from '@/utils/noteUtils';
 import { playNote as playNoteRaw, isAudioReady as checkAudioReady } from '@/utils/audioPlayer';
 import type { NoteId, PitchClass, FeedbackState, NoteStats } from '@/types';
@@ -33,7 +33,7 @@ interface UseLessonEngineReturn {
   endLesson: () => void;
 
   // Audio
-  initializeAudio: () => Promise<void>;
+  initializeAudio: () => Promise<AudioStatus>;
   isAudioReady: boolean;
 
   // Stats for analytics

@@ -136,11 +136,16 @@ function App() {
 
   /**
    * Handle ending lesson from LessonScreen.
-   * Transitions to analytics screen.
+   * Ends the lesson immediately (per spec: Stop = end lesson), then
+   * transitions to analytics. endLesson keeps the stats for the analytics
+   * screen; they are cleared by the next startLesson. Leaving the lesson
+   * active here let pending advance timers keep selecting notes during the
+   * exit transition.
    */
   const handleEndLesson = useCallback(() => {
+    resetLesson();
     navigateTo('analytics');
-  }, [navigateTo]);
+  }, [resetLesson, navigateTo]);
 
   /**
    * Handle returning to main menu from AnalyticsScreen.

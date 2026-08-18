@@ -1,10 +1,11 @@
 // components/LessonScreen/LessonScreen.tsx
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FeedbackOverlay } from './FeedbackOverlay';
 import { StaffDisplay } from './StaffDisplay';
 import { PianoKeyboard3D } from './PianoKeyboard3D';
 import { Button } from '@/components/ui';
 import { useLessonEngine, useMicInput } from '@/hooks';
+import type { AudioStatus } from '@/hooks/useAudio';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { PitchClass } from '@/types';
@@ -30,6 +31,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   const noteSelectionId = useLessonStore((state) => state.noteSelectionId);
   const showStaffDisplay = useSettingsStore((state) => state.showStaffDisplay);
   const micEnabled = useSettingsStore((state) => state.micEnabled);
+  const audioEnabled = useSettingsStore((state) => state.audioEnabled);
 
   const { micState, errorMessage: micError, detectedPitch, startMic, stopMic, suppressDetection } = useMicInput(handleKeyClick);
 
@@ -49,6 +51,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   }, [feedbackState, suppressDetection]);
 
   const [showTransition, setShowTransition] = useState(false);
+  const [audioStatus, setAudioStatus] = useState<AudioStatus>('ok');
   const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
 
@@ -74,30 +77,29 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     suppressDetection(2000);
   }, [suppressDetection]);
 
-  // Initialize audio immediately when lesson screen mounts
-  // Browser requires user gesture, so we also listen for first click as fallback
-  useEffect(() => {
-    if (!audioInitialized.current) {
-      console.log('[LessonScreen] Mounting - attempting audio init');
-      audioInitialized.current = true;
-      initializeAudio().then(() => {
-        console.log('[LessonScreen] Audio initialization promise resolved');
-      }).catch((err) => {
-        console.error('[LessonScreen] Audio initialization failed (expected if no user gesture yet):', err);
-        // Reset so click handler can try again
+  // Attempt audio init and record the outcome so failures are visible
+  // (spec error handling: "Audio was blocked" / "Audio unavailable").
+  // A non-ok outcome re-arms the flag so any later user gesture retries.
+  const tryInitAudio = useCallback(() => {
+    if (audioInitialized.current) return;
+    audioInitialized.current = true;
+    initializeAudio().then((status) => {
+      setAudioStatus(status);
+      if (status !== 'ok') {
         audioInitialized.current = false;
-      });
-    }
+      }
+    });
   }, [initializeAudio]);
+
+  // Initialize audio immediately when lesson screen mounts
+  // Browser requires user gesture, so clicks also retry via tryInitAudio
+  useEffect(() => {
+    tryInitAudio();
+  }, [tryInitAudio]);
 
   // Fallback: initialize on first click if mount init failed (browser autoplay policy)
   const onKeyClick = (pitchClass: PitchClass) => {
-    console.log('[LessonScreen] Key clicked:', pitchClass, 'audioInitialized:', audioInitialized.current);
-    if (!audioInitialized.current) {
-      console.log('[LessonScreen] Initializing audio on key click');
-      audioInitialized.current = true;
-      initializeAudio();
-    }
+    tryInitAudio();
     handleKeyClick(pitchClass);
   };
 
@@ -111,7 +113,12 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     feedbackState === 'showAnswer' ? correctPitchClass : null;
 
   return (
-    <div className="surface-paper min-h-screen flex flex-col items-center py-8 px-4 relative">
+    // The click handler implements the spec's "Click anywhere to enable
+    // sound" recovery for a blocked or failed audio context.
+    <div
+      className="surface-paper min-h-screen flex flex-col items-center py-8 px-4 relative"
+      onClick={audioStatus !== 'ok' ? tryInitAudio : undefined}
+    >
       {/* Note transition overlay - white flash that fades out */}
       {showTransition && (
         <div
@@ -144,6 +151,24 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
           highlightedKey={highlightedKey}
         />
       </div>
+
+      {/* Audio trouble notices (spec error handling) */}
+      {audioEnabled && audioStatus === 'blocked' && (
+        <div
+          className="text-xs uppercase tracking-[0.18em] text-brass-700 text-center mb-3"
+          data-testid="audio-blocked-notice"
+        >
+          Audio was blocked. Click anywhere to enable sound.
+        </div>
+      )}
+      {audioEnabled && audioStatus === 'unavailable' && (
+        <div
+          className="text-xs uppercase tracking-[0.18em] text-felt-600 text-center mb-3"
+          data-testid="audio-unavailable-notice"
+        >
+          Audio unavailable
+        </div>
+      )}
 
       {/* Mic Status Indicator */}
       {micEnabled && (

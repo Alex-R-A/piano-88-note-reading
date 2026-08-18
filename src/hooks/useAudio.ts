@@ -12,13 +12,20 @@ import {
 } from '@/utils/audioPlayer';
 import type { NoteId } from '@/types';
 
+/**
+ * Outcome of an audio initialization attempt, per spec error handling:
+ * 'blocked' = context suspended by autoplay policy (needs a user gesture),
+ * 'unavailable' = samples failed to load.
+ */
+export type AudioStatus = 'ok' | 'blocked' | 'unavailable';
+
 interface UseAudioReturn {
   /** Whether audio samples are loaded and ready for playback */
   isReady: boolean;
   /** Play a note (respects audioEnabled setting) */
   playNote: (noteId: NoteId) => void;
   /** Initialize audio (call on user interaction) */
-  initializeAudio: () => Promise<void>;
+  initializeAudio: () => Promise<AudioStatus>;
 }
 
 /**
@@ -40,26 +47,29 @@ export function useAudio(): UseAudioReturn {
    * Initialize audio system.
    * Should be called from a user interaction event handler.
    */
-  const initializeAudio = useCallback(async () => {
+  const initializeAudio = useCallback(async (): Promise<AudioStatus> => {
     if (!audioEnabled) {
-      return;
+      return 'ok';
     }
 
     if (initAttemptedRef.current && isReady) {
       // Already initialized, just resume if needed
-      await resumeAudioContext();
-      return;
+      return (await resumeAudioContext()) ? 'ok' : 'blocked';
     }
 
     initAttemptedRef.current = true;
 
     try {
       await initAudio();
-      await resumeAudioContext();
+      const resumed = await resumeAudioContext();
       setIsReady(true);
+      // A suspended context plays nothing even with samples loaded; callers
+      // surface this so a later user gesture can retry the resume.
+      return resumed ? 'ok' : 'blocked';
     } catch (error) {
       console.error('Audio initialization failed:', error);
       // Audio failure is non-fatal; app continues without sound
+      return 'unavailable';
     }
   }, [audioEnabled, isReady]);
 
