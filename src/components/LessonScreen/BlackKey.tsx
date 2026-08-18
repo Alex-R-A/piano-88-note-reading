@@ -4,17 +4,18 @@ import { ThreeEvent } from '@react-three/fiber';
 import { createBlackKeyGeometry } from '@/utils/keyGeometry';
 import type { PitchClass } from '@/types';
 
+// Ebony is never pure black; it reads as a very dark warm grey under light.
+const BLACK_KEY_COLOR = '#1c1a20';
+const BLACK_KEY_HOVER_COLOR = '#3c3944';
+const HIGHLIGHTED_COLOR = '#2563eb';
+const HOVER_DELAY_MS = 100;
+
 interface BlackKeyProps {
   pitchClass: PitchClass;
   position: [number, number, number];
   onClick: () => void;
   isHighlighted: boolean;
 }
-
-const BLACK_KEY_COLOR = '#2d2d2d';
-const BLACK_KEY_HOVER_COLOR = '#575757';
-const HIGHLIGHTED_COLOR = '#3b82f6';
-const HOVER_DELAY_MS = 100;
 
 export function BlackKey({
   pitchClass: _pitchClass,
@@ -37,6 +38,8 @@ export function BlackKey({
     <mesh
       geometry={geometry}
       position={position}
+      castShadow
+      receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         hoverTimeoutRef.current = window.setTimeout(() => {
@@ -56,7 +59,17 @@ export function BlackKey({
         onClick();
       }}
     >
-      <meshStandardMaterial color={color} flatShading={true} side={2} />
+      {/* Satin ebony. Modern sharps are a matte moulding, not lacquer, so the
+          roughness stays high and the coat is weak; a glossier setting turns
+          the long top face into a mirror streak. */}
+      <meshPhysicalMaterial
+        color={color}
+        roughness={0.62}
+        metalness={0}
+        clearcoat={0.18}
+        clearcoatRoughness={0.45}
+        envMapIntensity={0.45}
+      />
     </mesh>
   );
 }

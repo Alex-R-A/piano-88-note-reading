@@ -1,16 +1,16 @@
 // components/LessonScreen/PianoKeyboard3D.tsx
 import { Canvas } from '@react-three/fiber';
+import { Environment, Lightformer } from '@react-three/drei';
 import { useMemo } from 'react';
-import * as THREE from 'three';
 import { WhiteKey } from './WhiteKey';
 import { BlackKey } from './BlackKey';
 import { WebGLErrorBoundary } from '@/components/ui';
 import {
   WHITE_KEY_WIDTH,
   WHITE_KEY_HEIGHT,
-  WHITE_KEY_LENGTH,
-  BLACK_KEY_HEIGHT,
-  BLACK_KEY_LENGTH,
+  WHITE_KEY_SHAPES,
+  BLACK_KEY_CENTERS,
+  BLACK_KEY_Z,
 } from '@/utils/keyGeometry';
 import { areEnharmonic } from '@/utils/noteUtils';
 import type { PitchClass, NoteLetter } from '@/types';
@@ -22,13 +22,8 @@ interface PianoKeyboard3DProps {
 
 const WHITE_KEYS: NoteLetter[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
-const BLACK_KEYS: { pitchClass: PitchClass; whiteKeyIndex: number }[] = [
-  { pitchClass: 'C#', whiteKeyIndex: 0 },
-  { pitchClass: 'D#', whiteKeyIndex: 1 },
-  { pitchClass: 'F#', whiteKeyIndex: 3 },
-  { pitchClass: 'G#', whiteKeyIndex: 4 },
-  { pitchClass: 'A#', whiteKeyIndex: 5 },
-];
+// Ordered to match BLACK_KEY_CENTERS.
+const BLACK_KEYS: PitchClass[] = ['C#', 'D#', 'F#', 'G#', 'A#'];
 
 function isKeyHighlighted(
   keyPitchClass: PitchClass,
@@ -42,45 +37,103 @@ function KeyboardScene({
   onKeyClick,
   highlightedKey,
 }: PianoKeyboard3DProps) {
-  const keyboardWidth = WHITE_KEYS.length * WHITE_KEY_WIDTH;
-  const startX = -keyboardWidth / 2 + WHITE_KEY_WIDTH / 2;
+  // Layout runs left to right from the left edge of C; shift so the octave
+  // straddles the origin.
+  const centerShift = (WHITE_KEYS.length * WHITE_KEY_WIDTH) / 2;
 
   const whiteKeyPositions = useMemo(() => {
     return WHITE_KEYS.map((letter, index) => ({
       letter,
       pitchClass: letter as PitchClass,
+      shape: WHITE_KEY_SHAPES[index],
       position: [
-        startX + index * WHITE_KEY_WIDTH,
-        WHITE_KEY_HEIGHT / 2,
+        (index + 0.5) * WHITE_KEY_WIDTH - centerShift,
+        0,
         0,
       ] as [number, number, number],
     }));
-  }, [startX]);
+  }, [centerShift]);
 
   const blackKeyPositions = useMemo(() => {
-    // Position black keys so their back edge aligns with white key back edge
-    // Shift forward to prevent rear overhang
-    const zOffset = -(WHITE_KEY_LENGTH - BLACK_KEY_LENGTH) / 2 + 0.8;
-    return BLACK_KEYS.map(({ pitchClass, whiteKeyIndex }) => ({
+    return BLACK_KEYS.map((pitchClass, index) => ({
       pitchClass,
       position: [
-        startX + (whiteKeyIndex + 0.5) * WHITE_KEY_WIDTH,
-        WHITE_KEY_HEIGHT + BLACK_KEY_HEIGHT / 2,
-        zOffset,
+        BLACK_KEY_CENTERS[index] - centerShift,
+        WHITE_KEY_HEIGHT,
+        BLACK_KEY_Z,
       ] as [number, number, number],
     }));
-  }, [startX]);
+  }, [centerShift]);
 
   return (
     <>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[10, 20, 10]} intensity={0.8} />
-      <directionalLight position={[-10, 10, -10]} intensity={0.3} />
+      {/* A small studio built from emissive panels, baked once into an
+          environment map. Direct lights alone give the gloss coat a single
+          blown highlight; this is what makes the ebony grade from dark at
+          grazing angles to lit near the horizon, like real lacquer. */}
+      <Environment resolution={64} frames={1}>
+        <color attach="background" args={['#20202a']} />
+        {/* Broad overhead softbox. */}
+        <Lightformer
+          form="rect"
+          intensity={3}
+          color="#ffffff"
+          position={[0, 6, 1]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[12, 8, 1]}
+        />
+        {/* Warm side panel, matching the key light. */}
+        <Lightformer
+          form="rect"
+          intensity={1.6}
+          color="#fff4e2"
+          position={[-7, 3, 4]}
+          rotation={[0, Math.PI / 2.4, 0]}
+          scale={[8, 5, 1]}
+        />
+        {/* Cool bounce from the far side keeps the shadow side from dying. */}
+        <Lightformer
+          form="rect"
+          intensity={0.8}
+          color="#dfe6ff"
+          position={[7, 2, 2]}
+          rotation={[0, -Math.PI / 2.4, 0]}
+          scale={[8, 5, 1]}
+        />
+      </Environment>
 
-      {whiteKeyPositions.map(({ letter, pitchClass, position }) => (
+      {/* Soft room bounce: bright from above, dimmer from the keybed below. */}
+      <hemisphereLight args={['#ffffff', '#5d5c58', 0.35]} />
+
+      {/* Key light, front-left and high, casting the black keys onto the
+          white key tails. That shadow is the main depth cue at this angle. */}
+      <directionalLight
+        position={[-7, 16, 8]}
+        intensity={2.4}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-6}
+        shadow-camera-right={6}
+        shadow-camera-top={6}
+        shadow-camera-bottom={-6}
+        shadow-camera-near={1}
+        shadow-camera-far={40}
+        shadow-bias={-0.0006}
+        shadow-normalBias={0.015}
+      />
+
+      {/* Fill from the opposite side, no shadow, to keep the gaps from
+          crushing to solid black. */}
+      <directionalLight position={[9, 5, 4]} intensity={0.55} />
+
+      {/* Low rim light from behind, which picks out the top edge chamfers. */}
+      <directionalLight position={[0, 4, -10]} intensity={0.35} />
+
+      {whiteKeyPositions.map(({ letter, pitchClass, shape, position }) => (
         <WhiteKey
           key={letter}
           letter={letter}
+          shape={shape}
           position={position}
           onClick={() => onKeyClick(pitchClass)}
           isHighlighted={isKeyHighlighted(pitchClass, highlightedKey)}
@@ -111,6 +164,7 @@ export function PianoKeyboard3D({
     >
       <WebGLErrorBoundary>
         <Canvas
+          shadows="soft"
           camera={{
             position: [0, 9, 18],
             fov: 14,

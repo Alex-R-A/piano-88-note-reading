@@ -1,24 +1,26 @@
 // components/LessonScreen/WhiteKey.tsx
 import { useMemo, useState, useRef } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
-import { createWhiteKeyGeometry } from '@/utils/keyGeometry';
+import { createWhiteKeyGeometry, type WhiteKeyShape } from '@/utils/keyGeometry';
 import type { NoteLetter } from '@/types';
 
 interface WhiteKeyProps {
   letter: NoteLetter;
+  shape: WhiteKeyShape;
   position: [number, number, number];
   onClick: () => void;
   isHighlighted: boolean;
 }
 
-// Colors
-const WHITE_KEY_COLOR = '#f5f5f0';
-const WHITE_KEY_HOVER_COLOR = '#ffffff';
+// Colors. Key tops are warm off-white ivory rather than paper white.
+const WHITE_KEY_COLOR = '#f4f1e8';
+const WHITE_KEY_HOVER_COLOR = '#fffdf6';
 const HIGHLIGHTED_COLOR = '#3b82f6';
 const HOVER_DELAY_MS = 100;
 
 export function WhiteKey({
   letter: _letter,
+  shape,
   position,
   onClick,
   isHighlighted,
@@ -26,7 +28,7 @@ export function WhiteKey({
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<number | null>(null);
 
-  const geometry = useMemo(() => createWhiteKeyGeometry(), []);
+  const geometry = useMemo(() => createWhiteKeyGeometry(shape), [shape]);
 
   const color = isHighlighted
     ? HIGHLIGHTED_COLOR
@@ -38,6 +40,8 @@ export function WhiteKey({
     <mesh
       geometry={geometry}
       position={position}
+      castShadow
+      receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         hoverTimeoutRef.current = window.setTimeout(() => {
@@ -57,7 +61,16 @@ export function WhiteKey({
         onClick();
       }}
     >
-      <meshStandardMaterial color={color} />
+      {/* Polished key plastic: a diffuse ivory body under a thin gloss coat. */}
+      <meshPhysicalMaterial
+        color={color}
+        roughness={0.45}
+        metalness={0}
+        clearcoat={0.45}
+        clearcoatRoughness={0.22}
+        sheen={0.2}
+        sheenColor="#fff8e8"
+      />
     </mesh>
   );
 }
