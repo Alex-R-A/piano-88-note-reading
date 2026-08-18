@@ -24,11 +24,15 @@ const mockStop = vi.fn();
 const mockLoad = Promise.resolve();
 
 vi.mock('smplr', () => ({
-  SplendidGrandPiano: vi.fn().mockImplementation(() => ({
-    start: mockStart,
-    stop: mockStop,
-    load: mockLoad,
-  })),
+  // vitest 4 enforces construct semantics: `new SplendidGrandPiano()` needs a
+  // constructable function implementation, not an arrow.
+  SplendidGrandPiano: vi.fn(function () {
+    return {
+      start: mockStart,
+      stop: mockStop,
+      load: mockLoad,
+    };
+  }),
 }));
 
 describe('audioPlayer', () => {

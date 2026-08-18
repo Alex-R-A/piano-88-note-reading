@@ -11,13 +11,17 @@ vi.mock('vexflow', () => {
     scale: vi.fn(),
   };
 
-  const MockStave = vi.fn().mockImplementation(() => ({
-    addClef: vi.fn().mockReturnThis(),
-    setContext: vi.fn().mockReturnThis(),
-    draw: vi.fn().mockReturnThis(),
-  }));
+  // vitest 4 enforces construct semantics: `new` on a mock only works when
+  // the implementation is a constructable function, not an arrow.
+  const MockStave = vi.fn(function () {
+    return {
+      addClef: vi.fn().mockReturnThis(),
+      setContext: vi.fn().mockReturnThis(),
+      draw: vi.fn().mockReturnThis(),
+    };
+  });
 
-  const MockStaveNote = vi.fn().mockImplementation(() => {
+  const MockStaveNote = vi.fn(function () {
     // The hook nudges the note via its TickContext so the accidental travels
     // with the notehead. Real StaveNote inherits this from Tickable.
     let x = 0;
@@ -32,23 +36,31 @@ vi.mock('vexflow', () => {
     };
   });
 
-  const MockVoice = vi.fn().mockImplementation(() => ({
-    addTickable: vi.fn().mockReturnThis(),
-    draw: vi.fn().mockReturnThis(),
-  }));
+  const MockVoice = vi.fn(function () {
+    return {
+      addTickable: vi.fn().mockReturnThis(),
+      draw: vi.fn().mockReturnThis(),
+    };
+  });
 
-  const MockFormatter = vi.fn().mockImplementation(() => ({
-    joinVoices: vi.fn().mockReturnThis(),
-    format: vi.fn().mockReturnThis(),
-  }));
+  const MockFormatter = vi.fn(function () {
+    return {
+      joinVoices: vi.fn().mockReturnThis(),
+      format: vi.fn().mockReturnThis(),
+    };
+  });
 
-  const MockAccidental = vi.fn().mockImplementation(() => ({}));
+  const MockAccidental = vi.fn(function () {
+    return {};
+  });
 
   const MockRenderer = Object.assign(
-    vi.fn().mockImplementation(() => ({
-      resize: vi.fn(),
-      getContext: vi.fn().mockReturnValue(mockContext),
-    })),
+    vi.fn(function () {
+      return {
+        resize: vi.fn(),
+        getContext: vi.fn().mockReturnValue(mockContext),
+      };
+    }),
     { Backends: { SVG: 2, CANVAS: 1 } }
   );
 
@@ -101,10 +113,12 @@ describe('StaffDisplay', () => {
     // the aspect ratio carrying the width.
     render(<StaffDisplay noteId="C4" />);
 
+    // Assert the inline style, not the computed style: jsdom 30 evaluates
+    // min()/vh to pixels, which would tie this test to the fake viewport.
     const container = screen.getByLabelText('Musical staff showing note C4');
-    expect(container).toHaveStyle({ height: 'min(660px, 40vh)' });
+    expect(container.style.height).toBe('min(660px, 40vh)');
     expect(container.style.aspectRatio).not.toBe('');
-    expect(container).toHaveStyle({ maxWidth: '100%' });
+    expect(container.style.maxWidth).toBe('100%');
   });
 });
 

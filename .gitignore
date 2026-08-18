@@ -47,3 +47,6 @@ blob-report/
 
 # macOS
 .DS_Store
+
+# Tooling
+.serena/

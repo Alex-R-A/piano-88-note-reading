@@ -3,7 +3,7 @@
 // synthesized audio (the other useMicInput tests mock the pitch detector).
 // These pin the onset-gate behavior: steady hum and the ring of an already
 // answered note must not keep emitting; every emission needs a fresh attack.
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useMicInput } from './useMicInput';
 
@@ -80,7 +80,7 @@ describe('useMicInput with real pitchy on synthesized audio', () => {
     vi.unstubAllGlobals();
   });
 
-  async function startAndCalibrate(onNote: ReturnType<typeof vi.fn>) {
+  async function startAndCalibrate(onNote: Mock<(pitchClass: string) => void>) {
     const { result } = renderHook(() => useMicInput(onNote));
     await act(async () => {
       await result.current.startMic();
