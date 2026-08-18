@@ -28,9 +28,14 @@ vi.mock('pitchy', () => ({
   },
 }));
 
+// The hook assigns fftSize; frequencyBinCount tracks it as in the real node.
+const ANALYSER_FFT_SIZE_EXPECTED = 4096;
+
 class MockAnalyserNode {
   fftSize = 2048;
-  frequencyBinCount = 1024;
+  get frequencyBinCount() {
+    return this.fftSize / 2;
+  }
   getFloatTimeDomainData(buffer: Float32Array) {
     mockGetFloatTimeDomainData(buffer);
   }
@@ -267,6 +272,105 @@ describe('useMicInput', () => {
     // Loud signal but low clarity
     fillBufferWithRMS(0.5);
     mockFindPitchResult = [440, 0.5]; // clarity below 0.9
+    act(() => tickFrames(10));
+
+    expect(onNote).not.toHaveBeenCalled();
+  });
+
+  // --- Regression: noise floor must stay usable ---
+
+  it('still detects when calibration happened while a sound was playing', async () => {
+    // The failure this covers: the floor was mean * 3 with no ceiling, so any
+    // sustained sound during calibration (a fan, the app's own first note, the
+    // user trying a key) set a floor nothing could cross for the rest of the
+    // session, while the UI still reported the mic as active.
+    const onNote = vi.fn();
+    const { result } = renderHook(() => useMicInput(onNote));
+
+    await act(async () => {
+      await result.current.startMic();
+    });
+
+    // Calibrate against a note-level signal rather than silence.
+    fillBufferWithRMS(0.1);
+    act(() => tickFrames(6));
+    vi.spyOn(performance, 'now').mockReturnValue(1100);
+    act(() => tickFrames(1));
+    expect(result.current.micState).toBe('listening');
+
+    // Playing at that same level must still register.
+    mockFindPitchResult = [440, 0.95];
+    act(() => tickFrames(3));
+
+    expect(onNote).toHaveBeenCalledWith('A');
+  });
+
+  it('excludes suppressed frames from the noise floor measurement', async () => {
+    const onNote = vi.fn();
+    const { result } = renderHook(() => useMicInput(onNote));
+
+    await act(async () => {
+      await result.current.startMic();
+    });
+
+    // The app is making noise; these frames must not be measured.
+    act(() => result.current.suppressDetection(2000));
+    fillBufferWithRMS(0.9);
+    act(() => tickFrames(5));
+
+    // Calibration cannot finish while every frame is suppressed.
+    vi.spyOn(performance, 'now').mockReturnValue(1100);
+    act(() => tickFrames(2));
+    expect(result.current.micState).toBe('calibrating');
+
+    // Once the app goes quiet, the real room level is measured.
+    vi.spyOn(performance, 'now').mockReturnValue(2100);
+    fillBufferWithRMS(0.001);
+    act(() => tickFrames(2));
+    expect(result.current.micState).toBe('listening');
+
+    mockFindPitchResult = [440, 0.95];
+    fillBufferWithRMS(0.05);
+    act(() => tickFrames(3));
+
+    expect(onNote).toHaveBeenCalledWith('A');
+  });
+
+  it('analyses the full fft window, not half of it', async () => {
+    // frequencyBinCount is fftSize / 2. Sizing the buffer off it halved the
+    // analysis window and put every note below roughly 60Hz out of reach.
+    let analysedLength = 0;
+    mockGetFloatTimeDomainData = (buffer: Float32Array) => {
+      analysedLength = buffer.length;
+      buffer.fill(0.05);
+    };
+
+    const onNote = vi.fn();
+    const { result } = renderHook(() => useMicInput(onNote));
+
+    await act(async () => {
+      await result.current.startMic();
+    });
+    act(() => tickFrames(1));
+
+    expect(analysedLength).toBe(ANALYSER_FFT_SIZE_EXPECTED);
+  });
+
+  it('ignores a non-finite frequency even when clarity is high', async () => {
+    const onNote = vi.fn();
+    const { result } = renderHook(() => useMicInput(onNote));
+
+    await act(async () => {
+      await result.current.startMic();
+    });
+
+    fillBufferWithRMS(0.01);
+    act(() => tickFrames(2));
+    vi.spyOn(performance, 'now').mockReturnValue(1100);
+    act(() => tickFrames(1));
+
+    fillBufferWithRMS(0.5);
+    mockFindPitchResult = [0, 0.99];
     act(() => tickFrames(10));
 
     expect(onNote).not.toHaveBeenCalled();

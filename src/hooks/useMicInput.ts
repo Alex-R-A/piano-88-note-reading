@@ -16,16 +16,33 @@ export interface UseMicInputReturn {
 const CLARITY_THRESHOLD = 0.9;
 const CONSECUTIVE_FRAMES_REQUIRED = 3;
 const COOLDOWN_MS = 300;
-const ANALYSER_FFT_SIZE = 2048;
+
+// The analysis window is the whole FFT size, and pitch detection needs roughly
+// two periods of the fundamental. 4096 samples is ~85ms at 48kHz, which covers
+// A0 at 27.5Hz (a 36ms period). At 2048 the window bottoms out around 60Hz and
+// the lowest octave of the keyboard cannot be detected at all.
+const ANALYSER_FFT_SIZE = 4096;
+
 const CALIBRATION_DURATION_MS = 1000;
-const NOISE_FLOOR_MULTIPLIER = 3;
-const NOISE_FLOOR_MIN = 0.005;
+// Suppression can outlast the calibration window, so allow calibration to run
+// long rather than measuring nothing.
+const CALIBRATION_TIMEOUT_MS = 4000;
+
+const NOISE_FLOOR_MULTIPLIER = 2.5;
+const NOISE_FLOOR_MIN = 0.004;
+// Hard ceiling. Calibration measures whatever is audible, so a sustained sound
+// during the window (a fan, a voice, the app's own playback, the user testing
+// a note) would otherwise set a floor no real playing could cross, leaving the
+// mic permanently deaf while still reporting itself as active. Note onsets
+// measure well above this, and the clarity gate is what actually rejects noise.
+const NOISE_FLOOR_MAX = 0.02;
 
 const NOTE_NAMES: PitchClass[] = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
 ];
 
-function frequencyToPitchClass(hz: number): PitchClass {
+function frequencyToPitchClass(hz: number): PitchClass | null {
+  if (!Number.isFinite(hz) || hz <= 0) return null;
   const midi = Math.round(12 * Math.log2(hz / 440) + 69);
   return NOTE_NAMES[((midi % 12) + 12) % 12];
 }
@@ -36,6 +53,15 @@ function calculateRMS(buffer: Float32Array): number {
     sum += buffer[i] * buffer[i];
   }
   return Math.sqrt(sum / buffer.length);
+}
+
+/** Median rather than mean: one loud frame should not move the estimate. */
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
 }
 
 export function useMicInput(
@@ -105,12 +131,22 @@ export function useMicInput(
     const rms = calculateRMS(buffer);
 
     if (micStateRef.current === 'calibrating') {
-      calibrationSamplesRef.current.push(rms);
-      const elapsed = performance.now() - calibrationStartRef.current;
-      if (elapsed >= CALIBRATION_DURATION_MS) {
-        const samples = calibrationSamplesRef.current;
-        const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-        noiseFloorRef.current = Math.max(mean * NOISE_FLOOR_MULTIPLIER, NOISE_FLOOR_MIN);
+      const now = performance.now();
+      const elapsed = now - calibrationStartRef.current;
+      // Do not measure while the app is making noise of its own; the first note
+      // of a lesson is played within this window.
+      if (now >= suppressUntilRef.current) {
+        calibrationSamplesRef.current.push(rms);
+      }
+      const samples = calibrationSamplesRef.current;
+      const measured = elapsed >= CALIBRATION_DURATION_MS && samples.length > 0;
+      if (measured || elapsed >= CALIBRATION_TIMEOUT_MS) {
+        noiseFloorRef.current = samples.length
+          ? Math.min(
+              Math.max(median(samples) * NOISE_FLOOR_MULTIPLIER, NOISE_FLOOR_MIN),
+              NOISE_FLOOR_MAX
+            )
+          : NOISE_FLOOR_MIN;
         micStateRef.current = 'listening';
         setMicState('listening');
       }
@@ -140,6 +176,11 @@ export function useMicInput(
           }
         } else {
           const pitchClass = frequencyToPitchClass(freq);
+          if (pitchClass === null) {
+            stabilityBufferRef.current = [];
+            rafIdRef.current = requestAnimationFrame(detectionLoop);
+            return;
+          }
           if (lastDetectedPitchRef.current !== pitchClass) {
             lastDetectedPitchRef.current = pitchClass;
             setDetectedPitch(pitchClass);
@@ -184,6 +225,12 @@ export function useMicInput(
 
       const ctx = new AudioContext();
       audioContextRef.current = ctx;
+      // A context created outside a user gesture starts suspended, in which
+      // case the analyser only ever yields zeros and the mic reports itself as
+      // listening while hearing nothing.
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
 
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
@@ -191,9 +238,12 @@ export function useMicInput(
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      const detector = PitchDetector.forFloat32Array(analyser.frequencyBinCount);
+      // frequencyBinCount is half of fftSize. Sizing the time-domain buffer off
+      // it threw away half the analysis window.
+      const windowSize = analyser.fftSize;
+      const detector = PitchDetector.forFloat32Array(windowSize);
       detectorRef.current = detector;
-      bufferRef.current = new Float32Array(analyser.frequencyBinCount);
+      bufferRef.current = new Float32Array(windowSize);
 
       calibrationSamplesRef.current = [];
       calibrationStartRef.current = performance.now();

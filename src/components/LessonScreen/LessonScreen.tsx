@@ -65,6 +65,15 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     }
   }, [noteSelectionId, suppressDetection]);
 
+  // The lesson is started by App.tsx before this screen mounts, so the first
+  // note's selection id is already current and the effect above never fires for
+  // it. Without this the opening note plays through the speakers with the mic
+  // wide open, letting the app answer its own question and contaminating the
+  // noise-floor calibration.
+  useEffect(() => {
+    suppressDetection(2000);
+  }, [suppressDetection]);
+
   // Initialize audio immediately when lesson screen mounts
   // Browser requires user gesture, so we also listen for first click as fallback
   useEffect(() => {
