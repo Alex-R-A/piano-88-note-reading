@@ -12,20 +12,6 @@ let isLoaded = false;
 let loadPromise: Promise<void> | null = null;
 
 /**
- * Converts NoteId format to smplr-compatible format.
- * smplr accepts note names like "C4", "Db4", "C#4" directly.
- * Our NoteId format is the same, so minimal conversion needed.
- *
- * @param noteId - Note in format like "C#4", "Bb3", "G5"
- * @returns smplr-compatible note string
- */
-export function convertToSmplrFormat(noteId: NoteId): string {
-  // smplr accepts both "C#4" and "Db4" formats directly
-  // Our NoteId format matches smplr's expected format
-  return noteId;
-}
-
-/**
  * Initialize the audio system.
  * Creates AudioContext and loads SplendidGrandPiano samples.
  * Safe to call multiple times; will return existing promise if already loading.
@@ -122,12 +108,12 @@ export function playNote(noteId: NoteId): void {
     return;
   }
 
-  const smplrNote = convertToSmplrFormat(noteId);
-  console.log('[Audio] Playing note:', smplrNote);
+  // NoteId is already smplr's format ("C#4", "Bb3", "G5").
+  console.log('[Audio] Playing note:', noteId);
 
   try {
     // Start the note with short duration (0.5 seconds)
-    piano.start({ note: smplrNote, duration: 0.5 });
+    piano.start({ note: noteId, duration: 0.5 });
     console.log('[Audio] Note started successfully');
   } catch (error) {
     console.error('[Audio] Failed to play note:', noteId, error);
@@ -139,21 +125,6 @@ export function playNote(noteId: NoteId): void {
  */
 export function isAudioReady(): boolean {
   return isLoaded && piano !== null;
-}
-
-/**
- * Check if audio is currently loading.
- */
-export function isAudioLoading(): boolean {
-  return isLoading;
-}
-
-/**
- * Get the current AudioContext state.
- * Returns 'suspended', 'running', 'closed', or null if no context exists.
- */
-export function getAudioContextState(): AudioContextState | null {
-  return audioContext?.state ?? null;
 }
 
 /**

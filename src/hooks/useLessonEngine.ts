@@ -15,12 +15,12 @@ const SHOW_ANSWER_DURATION = 1000;
 // Total time before advancing to next note
 const TOTAL_FEEDBACK_TIME = FEEDBACK_FLASH_DURATION + FEEDBACK_FADE_DURATION;
 
-export interface LessonEngineStats {
+interface LessonEngineStats {
   overall: number;
   perNote: Array<{ noteId: NoteId; stats: NoteStats }>;
 }
 
-export interface UseLessonEngineReturn {
+interface UseLessonEngineReturn {
   // Current state
   currentNote: NoteId | null;
   feedbackState: FeedbackState;

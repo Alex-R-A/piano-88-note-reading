@@ -29,28 +29,10 @@ export interface NoteStats {
 }
 
 // Settings state
-export interface SettingsState {
-  selectedOctaves: Set<number>;
-  includeSharpsFlats: boolean;
-  audioEnabled: boolean;
-  showCorrectAnswer: boolean;
-}
-
 // Feedback state type
 export type FeedbackState = 'none' | 'correct' | 'incorrect' | 'showAnswer';
 
 // Lesson algorithm state
-export interface LessonState {
-  isActive: boolean;
-  fullNoteSet: NoteId[];
-  remainingNotes: Set<NoteId>;
-  errorWeights: Map<NoteId, number>;
-  recentBuffer: NoteId[];
-  currentNote: NoteId | null;
-  stats: Map<NoteId, NoteStats>;
-  feedbackState: FeedbackState;
-}
-
 // Screen routing
 export type Screen = 'main' | 'lesson' | 'analytics';
 

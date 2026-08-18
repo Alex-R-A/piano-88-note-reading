@@ -9,15 +9,12 @@ import {
   playNote as playNoteRaw,
   resumeAudioContext,
   isAudioReady,
-  isAudioLoading,
 } from '@/utils/audioPlayer';
 import type { NoteId } from '@/types';
 
-export interface UseAudioReturn {
+interface UseAudioReturn {
   /** Whether audio samples are loaded and ready for playback */
   isReady: boolean;
-  /** Whether audio is currently loading */
-  isLoading: boolean;
   /** Play a note (respects audioEnabled setting) */
   playNote: (noteId: NoteId) => void;
   /** Initialize audio (call on user interaction) */
@@ -35,7 +32,6 @@ export function useAudio(): UseAudioReturn {
   const { audioEnabled } = useSettingsStore();
 
   const [isReady, setIsReady] = useState(isAudioReady());
-  const [isLoading, setIsLoading] = useState(isAudioLoading());
 
   // Track if we've attempted initialization
   const initAttemptedRef = useRef(false);
@@ -56,7 +52,6 @@ export function useAudio(): UseAudioReturn {
     }
 
     initAttemptedRef.current = true;
-    setIsLoading(true);
 
     try {
       await initAudio();
@@ -65,8 +60,6 @@ export function useAudio(): UseAudioReturn {
     } catch (error) {
       console.error('Audio initialization failed:', error);
       // Audio failure is non-fatal; app continues without sound
-    } finally {
-      setIsLoading(false);
     }
   }, [audioEnabled, isReady]);
 
@@ -87,24 +80,11 @@ export function useAudio(): UseAudioReturn {
   // Sync state with audioPlayer module state
   useEffect(() => {
     setIsReady(isAudioReady());
-    setIsLoading(isAudioLoading());
   }, []);
 
-  // Handle audioEnabled toggle changes
-  useEffect(() => {
-    if (!audioEnabled) {
-      // When audio is disabled, we could dispose resources
-      // but for now we just stop playing (samples stay loaded for quick re-enable)
-      return;
-    }
-
-    // If audio was enabled and we haven't loaded yet, initialization
-    // will happen on next user interaction via initializeAudio
-  }, [audioEnabled]);
 
   return {
     isReady,
-    isLoading,
     playNote,
     initializeAudio,
   };

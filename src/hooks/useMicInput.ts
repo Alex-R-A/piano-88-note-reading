@@ -2,9 +2,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { PitchDetector } from 'pitchy';
 import type { PitchClass } from '@/types';
 
-export type MicState = 'idle' | 'calibrating' | 'listening' | 'error';
+type MicState = 'idle' | 'calibrating' | 'listening' | 'error';
 
-export interface UseMicInputReturn {
+interface UseMicInputReturn {
   micState: MicState;
   errorMessage: string | null;
   detectedPitch: PitchClass | null;

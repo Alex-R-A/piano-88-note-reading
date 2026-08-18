@@ -6,7 +6,7 @@ import { extractPitchClass, areEnharmonic } from '@/utils/noteUtils';
 const BUFFER_SIZE = 4; // Minimum gap before note can repeat
 
 interface LessonStore {
-  // State (matches LessonState from types)
+  // State
   isActive: boolean;
   fullNoteSet: NoteId[];
   remainingNotes: Set<NoteId>;

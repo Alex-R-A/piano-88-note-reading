@@ -4,11 +4,8 @@ import {
   initAudio,
   playNote,
   isAudioReady,
-  isAudioLoading,
-  getAudioContextState,
   resumeAudioContext,
   disposeAudio,
-  convertToSmplrFormat,
 } from './audioPlayer';
 
 // Mock AudioContext
@@ -47,26 +44,14 @@ describe('audioPlayer', () => {
     await disposeAudio();
   });
 
-  describe('convertToSmplrFormat', () => {
-    it('passes through NoteId unchanged (format matches smplr)', () => {
-      expect(convertToSmplrFormat('C4')).toBe('C4');
-      expect(convertToSmplrFormat('C#4')).toBe('C#4');
-      expect(convertToSmplrFormat('Db4')).toBe('Db4');
-      expect(convertToSmplrFormat('Bb3')).toBe('Bb3');
-      expect(convertToSmplrFormat('G5')).toBe('G5');
-      expect(convertToSmplrFormat('A#2')).toBe('A#2');
-    });
-  });
 
   describe('initAudio', () => {
     it('creates AudioContext and loads piano samples', async () => {
       expect(isAudioReady()).toBe(false);
-      expect(isAudioLoading()).toBe(false);
 
       await initAudio();
 
       expect(isAudioReady()).toBe(true);
-      expect(isAudioLoading()).toBe(false);
     });
 
     it('returns same promise if called while loading', async () => {
@@ -152,33 +137,7 @@ describe('audioPlayer', () => {
     });
   });
 
-  describe('isAudioLoading', () => {
-    it('returns false before initialization starts', () => {
-      expect(isAudioLoading()).toBe(false);
-    });
 
-    it('returns false after initialization completes', async () => {
-      await initAudio();
-      expect(isAudioLoading()).toBe(false);
-    });
-  });
-
-  describe('getAudioContextState', () => {
-    it('returns null before initialization', () => {
-      expect(getAudioContextState()).toBe(null);
-    });
-
-    it('returns context state after initialization', async () => {
-      await initAudio();
-      expect(getAudioContextState()).toBe('suspended');
-    });
-
-    it('returns null after disposal', async () => {
-      await initAudio();
-      await disposeAudio();
-      expect(getAudioContextState()).toBe(null);
-    });
-  });
 
   describe('resumeAudioContext', () => {
     it('returns false if no context exists', async () => {
@@ -235,8 +194,6 @@ describe('audioPlayer', () => {
       await disposeAudio();
 
       expect(isAudioReady()).toBe(false);
-      expect(isAudioLoading()).toBe(false);
-      expect(getAudioContextState()).toBe(null);
     });
 
     it('is safe to call multiple times', async () => {
@@ -268,7 +225,6 @@ describe('audioPlayer', () => {
 
       await expect(initAudio()).rejects.toThrow('Load failed');
       expect(isAudioReady()).toBe(false);
-      expect(isAudioLoading()).toBe(false);
     });
 
     it('handles playNote errors gracefully', async () => {
