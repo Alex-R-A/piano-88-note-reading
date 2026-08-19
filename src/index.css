@@ -82,6 +82,22 @@
   will-change: opacity;
 }
 
+/* Wrong-answer heckling: a Boo! rises from behind the keyboard, drifts,
+   and dissolves before reaching the top of the page. */
+@keyframes boo-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  12% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--boo-drift, 0px), -78vh);
+  }
+}
+
 /* New note entrance: the notehead fades in over the persistent staff. */
 @keyframes note-fade-in {
   from {

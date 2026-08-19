@@ -4,80 +4,53 @@ import { render, screen } from '@testing-library/react';
 import { FeedbackOverlay } from './FeedbackOverlay';
 
 describe('FeedbackOverlay', () => {
-  it('renders with transparent background when state is "none"', () => {
-    render(<FeedbackOverlay feedbackState="none" />);
-    const overlay = screen.getByTestId('feedback-overlay');
+  it('exposes the feedback state for observation', () => {
+    const { rerender } = render(<FeedbackOverlay feedbackState="none" />);
+    expect(screen.getByTestId('feedback-overlay')).toHaveAttribute('data-feedback', 'none');
 
-    expect(overlay).toBeInTheDocument();
-    // Check that opacity is 0 (invisible), meaning no visible color
-    expect(overlay).toHaveStyle({ opacity: '0' });
-    // Verify the computed backgroundColor is either transparent or rgba(0,0,0,0)
-    const bgColor = overlay.style.backgroundColor;
-    expect(bgColor === 'transparent' || bgColor === 'rgba(0, 0, 0, 0)' || bgColor === '').toBe(true);
+    rerender(<FeedbackOverlay feedbackState="correct" />);
+    expect(screen.getByTestId('feedback-overlay')).toHaveAttribute('data-feedback', 'correct');
+
+    rerender(<FeedbackOverlay feedbackState="incorrect" />);
+    expect(screen.getByTestId('feedback-overlay')).toHaveAttribute('data-feedback', 'incorrect');
   });
 
-  it('renders with green background when state is "correct"', () => {
+  it('shows no visual feedback for a correct answer (the advance is the confirmation)', () => {
     render(<FeedbackOverlay feedbackState="correct" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
-    expect(overlay).toHaveStyle({ backgroundColor: 'rgba(34, 197, 94, 0.3)' });
-    expect(overlay).toHaveStyle({ opacity: '1' });
+    expect(screen.queryAllByText('Boo!')).toHaveLength(0);
   });
 
-  it('renders with red background when state is "incorrect"', () => {
+  it('shows nothing in the idle and showAnswer states', () => {
+    const { rerender } = render(<FeedbackOverlay feedbackState="none" />);
+    expect(screen.queryAllByText('Boo!')).toHaveLength(0);
+
+    rerender(<FeedbackOverlay feedbackState="showAnswer" />);
+    expect(screen.queryAllByText('Boo!')).toHaveLength(0);
+  });
+
+  it('launches a wave of Boo!s on a wrong answer', () => {
+    const { rerender } = render(<FeedbackOverlay feedbackState="none" />);
+    rerender(<FeedbackOverlay feedbackState="incorrect" />);
+
+    expect(screen.getAllByText('Boo!').length).toBeGreaterThanOrEqual(8);
+  });
+
+  it('launches a fresh wave for each consecutive mistake', () => {
+    const { rerender } = render(<FeedbackOverlay feedbackState="none" />);
+    rerender(<FeedbackOverlay feedbackState="incorrect" />);
+    const firstWave = screen.getAllByText('Boo!').length;
+
+    rerender(<FeedbackOverlay feedbackState="none" />);
+    rerender(<FeedbackOverlay feedbackState="incorrect" />);
+    expect(screen.getAllByText('Boo!').length).toBe(firstWave);
+  });
+
+  it('lets clicks pass through and stays behind content', () => {
     render(<FeedbackOverlay feedbackState="incorrect" />);
     const overlay = screen.getByTestId('feedback-overlay');
 
-    expect(overlay).toHaveStyle({ backgroundColor: 'rgba(239, 68, 68, 0.3)' });
-    expect(overlay).toHaveStyle({ opacity: '1' });
-  });
-
-  it('renders with transparent background when state is "showAnswer"', () => {
-    render(<FeedbackOverlay feedbackState="showAnswer" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
-    // showAnswer state should be transparent (key highlighting handled by PianoKeyboard3D)
-    expect(overlay).toHaveStyle({ opacity: '0' });
-    // Verify the computed backgroundColor is either transparent or rgba(0,0,0,0)
-    const bgColor = overlay.style.backgroundColor;
-    expect(bgColor === 'transparent' || bgColor === 'rgba(0, 0, 0, 0)' || bgColor === '').toBe(true);
-  });
-
-  it('has pointer-events: none to allow clicks to pass through', () => {
-    render(<FeedbackOverlay feedbackState="correct" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
-    expect(overlay).toHaveClass('pointer-events-none');
-  });
-
-  it('has fixed positioning to cover the full screen', () => {
-    render(<FeedbackOverlay feedbackState="none" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
-    expect(overlay).toHaveClass('fixed', 'inset-0');
-  });
-
-  it('has proper CSS transitions for fade effect', () => {
-    render(<FeedbackOverlay feedbackState="correct" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
-    // Check that transition includes both background-color and opacity with 200ms duration
-    expect(overlay).toHaveStyle({
-      transition: 'background-color 200ms ease-out, opacity 200ms ease-out',
-    });
-  });
-
-  it('has z-index of 0 to render behind content', () => {
-    render(<FeedbackOverlay feedbackState="correct" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
+    expect(overlay).toHaveClass('pointer-events-none', 'fixed', 'inset-0');
     expect(overlay).toHaveStyle({ zIndex: '0' });
-  });
-
-  it('has aria-hidden="true" for accessibility', () => {
-    render(<FeedbackOverlay feedbackState="none" />);
-    const overlay = screen.getByTestId('feedback-overlay');
-
     expect(overlay).toHaveAttribute('aria-hidden', 'true');
   });
 });

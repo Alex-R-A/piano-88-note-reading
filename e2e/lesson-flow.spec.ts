@@ -1,28 +1,27 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const TRANSPARENT = /rgba?\(0,\s*0,\s*0,?\s*0?\)/;
-
 /**
- * Click the keyboard center until a feedback flash appears, then let the
- * feedback cycle finish. The R3F canvas initializes asynchronously, so a
- * click issued the moment the lesson screen appears can land before the 3D
- * scene is interactive. Returns the flash color. Consumes one answer.
+ * Click the keyboard center until the answer registers (the overlay's
+ * data-feedback attribute leaves 'none'), then let the feedback cycle
+ * finish. The R3F canvas initializes asynchronously, so a click issued the
+ * moment the lesson screen appears can land before the 3D scene is
+ * interactive. Returns the feedback verdict. Consumes one answer.
  */
 async function answerAtCenter(page: Page): Promise<string> {
   const overlay = page.getByTestId('feedback-overlay');
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
-  let color = '';
+  let verdict = 'none';
   await expect(async () => {
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await page.waitForTimeout(120);
-    color = await overlay.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(color).not.toMatch(TRANSPARENT);
+    verdict = (await overlay.getAttribute('data-feedback')) ?? 'none';
+    expect(verdict).not.toBe('none');
   }).toPass({ timeout: 15000 });
-  // Let flash + fade + advance complete so the next click lands on a fresh
-  // question.
+  // Let feedback + advance + the next note's fade-in complete so the next
+  // click lands on a fresh, unlocked question.
   await page.waitForTimeout(1400);
-  return color;
+  return verdict;
 }
 
 /**
@@ -158,23 +157,21 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       await expect(page.getByText('Audio unavailable')).toBeVisible();
     });
 
-    test('clicking a key triggers feedback (background color change)', async ({ page }) => {
+    test('answering records a verdict and a miss raises the Boo! swarm', async ({ page }) => {
       const overlay = page.getByTestId('feedback-overlay');
-      await expect(overlay).toBeVisible();
-
-      const initialBgColor = await overlay.evaluate((el) => {
-        return window.getComputedStyle(el).backgroundColor;
-      });
-      expect(initialBgColor).toMatch(TRANSPARENT);
+      await expect(overlay).toHaveAttribute('data-feedback', 'none');
 
       // The camera looks at the keyboard's center, so the canvas center lands
-      // on the F key.
-      const flashColor = await answerAtCenter(page);
+      // on the F key. The displayed note is random, so F is usually wrong;
+      // answer until a miss occurs (bounded).
+      let verdict = '';
+      for (let i = 0; i < 6 && verdict !== 'incorrect'; i++) {
+        verdict = await answerAtCenter(page);
+      }
+      expect(verdict).toBe('incorrect');
 
-      // Green rgba(34, 197, 94, 0.3) or red rgba(239, 68, 68, 0.3)
-      const isGreen = flashColor.includes('34') && flashColor.includes('197');
-      const isRed = flashColor.includes('239') && flashColor.includes('68');
-      expect(isGreen || isRed).toBe(true);
+      // The heckling swarm is still airborne right after the wait.
+      expect(await page.getByText('Boo!').count()).toBeGreaterThan(0);
     });
 
     test('stop button navigates to analytics screen', async ({ page }) => {
