@@ -85,6 +85,15 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     // Draw the voice
     voice.draw(context, stave);
 
+    // The stave and clef redraw identically on every note, so they read as
+    // constant; only the note is new, and it fades in quickly rather than
+    // appearing behind a masking overlay (which showed as a pale square over
+    // the answer-feedback wash).
+    const noteGroup = containerRef.current.querySelector('.vf-stavenote');
+    if (noteGroup) {
+      (noteGroup as SVGElement).style.animation = 'note-fade-in 160ms ease-out both';
+    }
+
     // Frame the drawing.
     //
     // VexFlow sizes the SVG to a fixed window (166.67 x 220 user units after

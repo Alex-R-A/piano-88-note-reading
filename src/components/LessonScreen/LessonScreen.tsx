@@ -50,21 +50,18 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
     }
   }, [feedbackState, suppressDetection]);
 
-  const [showTransition, setShowTransition] = useState(false);
   const [audioStatus, setAudioStatus] = useState<AudioStatus>('ok');
   const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
 
-  // Trigger page transition when a new note is selected
-  // Uses a key-based approach: increment key to remount the overlay with fresh animation
-  // Also suppress mic detection to avoid picking up the played sample audio
+  // Suppress mic detection on each new note to avoid picking up the played
+  // sample audio. The note's visual entrance is handled inside the staff
+  // itself (useVexFlow fades the new note in); the staff lines and clef stay
+  // put.
   useEffect(() => {
     if (noteSelectionId !== prevSelectionIdRef.current && noteSelectionId > 0) {
       prevSelectionIdRef.current = noteSelectionId;
-      setShowTransition(true);
       suppressDetection(2000);
-      const timer = setTimeout(() => setShowTransition(false), 400);
-      return () => clearTimeout(timer);
     }
   }, [noteSelectionId, suppressDetection]);
 
@@ -133,23 +130,8 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
 
       {/* Staff Display - hidden for audio-only mode */}
       {showStaffDisplay && (
-        <div className="mb-4 relative">
+        <div className="mb-4">
           <StaffDisplay noteId={currentNote} />
-          {/* Note transition - a brief fade over the staff only. This used
-              to cover the whole viewport, which strobed the entire page
-              (keyboard included) on every answer and was hard on the eyes
-              over a long session. Only the notation changes, so only it
-              turns the page. bg-ivory matches the paper ground, so it reads
-              as the staff blanking rather than a white flash. */}
-          {showTransition && (
-            <div
-              key={noteSelectionId}
-              className="absolute inset-0 bg-ivory pointer-events-none z-10"
-              style={{
-                animation: 'fadeOut 400ms ease-out forwards',
-              }}
-            />
-          )}
         </div>
       )}
 

@@ -82,12 +82,12 @@
   will-change: opacity;
 }
 
-/* Note presentation transition - starts opaque, fades to transparent */
-@keyframes fadeOut {
+/* New note entrance: the notehead fades in over the persistent staff. */
+@keyframes note-fade-in {
   from {
-    opacity: 1;
+    opacity: 0;
   }
   to {
-    opacity: 0;
+    opacity: 1;
   }
 }
