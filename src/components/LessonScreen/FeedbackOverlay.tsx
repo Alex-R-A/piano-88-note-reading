@@ -35,7 +35,7 @@ function makeBoos(): Boo[] {
   return Array.from({ length: BOO_COUNT }, () => ({
     left: 8 + Math.random() * 84, // % across the page
     bottom: 12 + Math.random() * 18, // % up the page: around the keyboard base
-    size: 22 + Math.random() * 26,
+    size: 34 + Math.random() * 38,
     delay: Math.random() * 350,
     duration: 950 + Math.random() * 500,
     tilt: -14 + Math.random() * 28,
