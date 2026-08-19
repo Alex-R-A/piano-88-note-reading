@@ -42,10 +42,18 @@ the whole loop, and the loop is engineered to teach fast:
 
 ## What is different about this app
 
-- **A real staff, not a diagram.** Proper engraved notation with treble and
-  bass clefs, ledger lines, sharps and flats in both spellings, rendered the
-  way sheet music actually prints. You practice reading the thing you will
-  actually read.
+- **A real staff, not a diagram.** Proper engraved notation with ledger
+  lines and with sharps and flats in both spellings, rendered the way sheet
+  music actually prints. You practice reading the thing you will actually
+  read.
+- **Both clefs, not just the easy one.** Piano music is written on two
+  staves: treble clef for the right hand, bass clef for the left, and the
+  same-looking line means a different note on each (the bottom line is E in
+  treble but G in bass). Many trainers drill only the treble clef and leave
+  your left hand illiterate. Here the clef follows the octaves you choose:
+  octaves below middle C come as bass clef, above as treble, and mixing them
+  drills the switch itself, which is exactly what real sheet music demands
+  of you.
 - **A real keyboard, not lettered buttons.** You answer on a 3D piano with
   correct key geometry. You are not learning that a note is called E, you are
   learning where E lives under your hand.
