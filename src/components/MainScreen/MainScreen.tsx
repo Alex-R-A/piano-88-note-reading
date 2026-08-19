@@ -52,6 +52,18 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
     <div className="surface-paper min-h-screen flex flex-col items-center py-12 px-4">
       {/* Header */}
       <div className="text-center mb-10">
+        {/* Decorative grand piano above the title, concert-programme style.
+            Intrinsic width/height reserve the space so the title does not
+            shift while the image loads. */}
+        <img
+          src="/grand-piano.png"
+          alt=""
+          aria-hidden="true"
+          width={640}
+          height={480}
+          draggable={false}
+          className="mx-auto mb-3 h-44 w-auto select-none pointer-events-none"
+        />
         <h1 className="font-display text-6xl font-semibold text-ink-900 leading-none">
           Piano 88
         </h1>
