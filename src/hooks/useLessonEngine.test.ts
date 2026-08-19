@@ -7,6 +7,7 @@ import {
   FEEDBACK_FADE_DURATION,
   SHOW_ANSWER_DURATION,
   TOTAL_FEEDBACK_TIME,
+  CORRECT_ADVANCE_DELAY,
 } from './useLessonEngine';
 import { useLessonStore } from '@/stores/lessonStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -494,6 +495,69 @@ describe('useLessonEngine', () => {
       expect(FEEDBACK_FADE_DURATION).toBe(200);
       expect(SHOW_ANSWER_DURATION).toBe(1000);
       expect(TOTAL_FEEDBACK_TIME).toBe(1000); // 800 + 200
+      // Correct answers advance faster: with no visual fanfare, the full
+      // second was dead time.
+      expect(CORRECT_ADVANCE_DELAY).toBeLessThan(TOTAL_FEEDBACK_TIME);
+    });
+  });
+
+  describe('correct answers advance faster than wrong ones', () => {
+    it('advances at CORRECT_ADVANCE_DELAY on a correct answer, not before', () => {
+      useLessonStore.setState({
+        isActive: true,
+        fullNoteSet: ['C4', 'D4', 'E4', 'F4', 'G4'],
+        remainingNotes: new Set(['C4', 'D4', 'E4', 'F4', 'G4']),
+        errorWeights: new Map(),
+        recentBuffer: [],
+        currentNote: 'C4',
+        stats: new Map(),
+        feedbackState: 'none',
+      });
+      const { result } = renderHook(() => useLessonEngine());
+
+      act(() => {
+        result.current.handleKeyClick('C');
+      });
+      expect(result.current.feedbackState).toBe('correct');
+
+      act(() => {
+        vi.advanceTimersByTime(CORRECT_ADVANCE_DELAY - 1);
+      });
+      expect(result.current.feedbackState).toBe('correct');
+
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(result.current.feedbackState).toBe('none');
+    });
+
+    it('keeps the full feedback window on a wrong answer', () => {
+      useLessonStore.setState({
+        isActive: true,
+        fullNoteSet: ['C4', 'D4', 'E4', 'F4', 'G4'],
+        remainingNotes: new Set(['C4', 'D4', 'E4', 'F4', 'G4']),
+        errorWeights: new Map(),
+        recentBuffer: [],
+        currentNote: 'C4',
+        stats: new Map(),
+        feedbackState: 'none',
+      });
+      const { result } = renderHook(() => useLessonEngine());
+
+      act(() => {
+        result.current.handleKeyClick('D'); // wrong
+      });
+      expect(result.current.feedbackState).toBe('incorrect');
+
+      act(() => {
+        vi.advanceTimersByTime(TOTAL_FEEDBACK_TIME - 1);
+      });
+      expect(result.current.feedbackState).toBe('incorrect');
+
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(result.current.feedbackState).toBe('none');
     });
   });
 });

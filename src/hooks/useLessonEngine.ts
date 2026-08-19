@@ -12,8 +12,13 @@ const FEEDBACK_FLASH_DURATION = 800;
 const FEEDBACK_FADE_DURATION = 200;
 const SHOW_ANSWER_DURATION = 1000;
 
-// Total time before advancing to next note
+// Total time before advancing to next note (wrong answers: the mistake
+// deserves a beat of attention while the Boo!s fly)
 const TOTAL_FEEDBACK_TIME = FEEDBACK_FLASH_DURATION + FEEDBACK_FADE_DURATION;
+
+// A correct answer has no visual fanfare, so a full second before the next
+// note is dead time; advance faster.
+const CORRECT_ADVANCE_DELAY = 600;
 
 interface LessonEngineStats {
   overall: number;
@@ -174,14 +179,12 @@ export function useLessonEngine(): UseLessonEngineReturn {
       clearAllTimers();
 
       if (isCorrect) {
-        // Correct answer: flash green, then advance
-        // Store already set feedbackState to 'correct'
-
-        // After flash + fade, advance to next note
+        // Correct answer: brief pause (the advance itself is the
+        // confirmation), then on to the next note
         advanceTimerRef.current = setTimeout(() => {
           selectNextNote();
           correctPitchClassRef.current = null;
-        }, TOTAL_FEEDBACK_TIME);
+        }, CORRECT_ADVANCE_DELAY);
       } else {
         // Incorrect answer: flash red
         // Store already set feedbackState to 'incorrect'
@@ -275,4 +278,5 @@ export {
   FEEDBACK_FADE_DURATION,
   SHOW_ANSWER_DURATION,
   TOTAL_FEEDBACK_TIME,
+  CORRECT_ADVANCE_DELAY,
 };
