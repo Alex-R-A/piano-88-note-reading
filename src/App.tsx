@@ -82,6 +82,13 @@ function App() {
     setWebGLSupported(isWebGLSupported());
   }, []);
 
+  // Screens swap content within the same document, so the scroll position
+  // carries over (e.g. scrolled down to reach Start Lesson, the lesson then
+  // opens mid-page). Every screen lays out from the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentScreen]);
+
   // Check viewport width on mount and resize
   useEffect(() => {
     function checkViewport() {
