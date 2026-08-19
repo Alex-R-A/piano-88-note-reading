@@ -1,6 +1,6 @@
 // components/LessonScreen/PianoKeyboard3D.tsx
 import { Canvas } from '@react-three/fiber';
-import { Environment, Lightformer } from '@react-three/drei';
+import { ContactShadows, Environment, Lightformer } from '@react-three/drei';
 import { useMemo } from 'react';
 import { WhiteKey } from './WhiteKey';
 import { BlackKey } from './BlackKey';
@@ -131,6 +131,21 @@ function KeyboardScene({
 
       {/* Low rim light from behind, which picks out the top edge chamfers. */}
       <directionalLight position={[0, 4, -10]} intensity={0.35} />
+
+      {/* Grounding shadow: a soft pool directly beneath the instrument.
+          The key light is too steep for its cast shadow to escape the
+          keyboard's footprint, so without this the keys read as floating.
+          ContactShadows stays independent of the light rig, spreads around
+          the footprint, and follows keys as they sink when pressed. */}
+      <ContactShadows
+        position={[0, -0.01, 0]}
+        opacity={0.5}
+        scale={14}
+        blur={2.4}
+        far={2}
+        resolution={512}
+        color="#3a3430"
+      />
 
       {whiteKeyPositions.map(({ letter, pitchClass, shape, position }) => (
         <WhiteKey
