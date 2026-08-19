@@ -1,7 +1,7 @@
 // stores/lessonStore.ts
 import { create } from 'zustand';
 import type { NoteId, NoteStats, PitchClass, FeedbackState } from '@/types';
-import { extractPitchClass, areEnharmonic } from '@/utils/noteUtils';
+import { extractPitchClass, areEnharmonic, getKeyPosition } from '@/utils/noteUtils';
 
 const BUFFER_SIZE = 4; // Minimum gap before note can repeat
 
@@ -29,10 +29,20 @@ interface LessonStore {
   };
 }
 
+/** The physical key a note asks for (0-11), octave and spelling collapsed. */
+function keyOf(noteId: NoteId): number {
+  return getKeyPosition(extractPitchClass(noteId));
+}
+
 /**
  * Select the next note using weighted random selection with anti-clustering.
  * Implements spec lines 449-477.
- * Never selects the same note twice in a row unless it's a single-note set.
+ *
+ * Back-to-back exclusion works on the PHYSICAL KEY, not the NoteId: the
+ * answer is octave-blind and enharmonic-aware, so C4 after C3, or Db4 after
+ * C#4, would demand the same key press twice in a row and read as "the same
+ * note again" even though the ids differ. Repeats only happen when the whole
+ * set collapses to one key (e.g. octave 8 alone, or only C#4/Db4).
  */
 function selectNextNoteFromState(state: {
   fullNoteSet: NoteId[];
@@ -57,19 +67,28 @@ function selectNextNoteFromState(state: {
     }
   }
 
-  // 2. Filter out recently shown notes (anti-clustering)
-  // Also explicitly exclude the current note to prevent back-to-back repeats
+  const currentKey = state.currentNote === null ? null : keyOf(state.currentNote);
+  const differentKey = (note: NoteId) => currentKey === null || keyOf(note) !== currentKey;
+
+  // 2. Filter out recently shown notes (anti-clustering) and anything that
+  // would repeat the key the user just answered
   let filtered = candidates.filter(
-    (note) => !state.recentBuffer.includes(note) && note !== state.currentNote
+    (note) => !state.recentBuffer.includes(note) && differentKey(note)
   );
 
   // 3. Handle edge case: all candidates filtered out
   // This can happen if note set is very small (< BUFFER_SIZE)
   if (filtered.length === 0) {
-    // Fall back to any note except the current one
-    filtered = state.fullNoteSet.filter((note) => note !== state.currentNote);
+    // Fall back to any note on a different key than the current one
+    filtered = state.fullNoteSet.filter(differentKey);
 
-    // Ultimate fallback: if still empty (single-note set), use the only note
+    // The whole set sits on one key (e.g. only C#4/Db4): at least avoid the
+    // identical NoteId so the spellings alternate
+    if (filtered.length === 0) {
+      filtered = state.fullNoteSet.filter((note) => note !== state.currentNote);
+    }
+
+    // Ultimate fallback: single-note set
     if (filtered.length === 0) {
       filtered = [...state.fullNoteSet];
     }

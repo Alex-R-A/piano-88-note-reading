@@ -1,6 +1,7 @@
 // stores/lessonStore.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useLessonStore, BUFFER_SIZE } from './lessonStore';
+import { extractPitchClass, getKeyPosition } from '@/utils/noteUtils';
 
 describe('lessonStore', () => {
   // Reset store before each test
@@ -531,5 +532,70 @@ describe('lessonStore', () => {
       const { overall } = useLessonStore.getState().getSessionStats();
       expect(overall).toBe(100);
     });
+  });
+});
+
+describe('back-to-back exclusion works on the physical key, not the NoteId', () => {
+  function startWith(noteSet: string[]) {
+    useLessonStore.setState({
+      isActive: false,
+      fullNoteSet: [],
+      remainingNotes: new Set(),
+      errorWeights: new Map(),
+      recentBuffer: [],
+      currentNote: null,
+      noteSelectionId: 0,
+      stats: new Map(),
+      feedbackState: 'none',
+    });
+    useLessonStore.getState().startLesson(noteSet);
+  }
+
+  function answerAndAdvance() {
+    const store = useLessonStore.getState();
+    const current = store.currentNote!;
+    store.processAnswer(extractPitchClass(current));
+    useLessonStore.getState().selectNextNote();
+  }
+
+  it('never asks for the same key twice across octaves (C3 then C4 reads as a repeat)', () => {
+    startWith(['C3', 'C4', 'D3', 'D4', 'E3', 'E4']);
+    let prevKey = getKeyPosition(extractPitchClass(useLessonStore.getState().currentNote!));
+    for (let i = 0; i < 400; i++) {
+      answerAndAdvance();
+      const key = getKeyPosition(extractPitchClass(useLessonStore.getState().currentNote!));
+      expect(key).not.toBe(prevKey);
+      prevKey = key;
+    }
+  });
+
+  it('never follows a note with its enharmonic spelling (C#4 then Db4 is the same key)', () => {
+    startWith(['C#4', 'Db4', 'D#4', 'Eb4', 'F4', 'G4']);
+    let prevKey = getKeyPosition(extractPitchClass(useLessonStore.getState().currentNote!));
+    for (let i = 0; i < 400; i++) {
+      answerAndAdvance();
+      const key = getKeyPosition(extractPitchClass(useLessonStore.getState().currentNote!));
+      expect(key).not.toBe(prevKey);
+      prevKey = key;
+    }
+  });
+
+  it('a set collapsing to one key alternates spellings rather than repeating the id', () => {
+    startWith(['C#4', 'Db4']);
+    let prev = useLessonStore.getState().currentNote!;
+    for (let i = 0; i < 50; i++) {
+      answerAndAdvance();
+      const next = useLessonStore.getState().currentNote!;
+      expect(next).not.toBe(prev);
+      prev = next;
+    }
+  });
+
+  it('a single-note set still repeats without crashing', () => {
+    startWith(['C8']);
+    for (let i = 0; i < 20; i++) {
+      answerAndAdvance();
+      expect(useLessonStore.getState().currentNote).toBe('C8');
+    }
   });
 });
