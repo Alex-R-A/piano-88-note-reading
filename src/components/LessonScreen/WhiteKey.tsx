@@ -1,5 +1,5 @@
 // components/LessonScreen/WhiteKey.tsx
-import { useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import { createWhiteKeyGeometry, type WhiteKeyShape } from '@/utils/keyGeometry';
 import type { NoteLetter } from '@/types';
@@ -30,6 +30,13 @@ export function WhiteKey({
 
   const geometry = useMemo(() => createWhiteKeyGeometry(shape), [shape]);
 
+  // The keys are click targets, so the cursor shows the pointing hand while
+  // over one. Set directly (not via the delayed hover state) so it reacts
+  // instantly, and cleared on unmount in case the lesson ends mid-hover.
+  useEffect(() => () => {
+    document.body.style.cursor = '';
+  }, []);
+
   const color = isHighlighted
     ? HIGHLIGHTED_COLOR
     : isHovered
@@ -44,12 +51,14 @@ export function WhiteKey({
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        document.body.style.cursor = 'pointer';
         hoverTimeoutRef.current = window.setTimeout(() => {
           setIsHovered(true);
         }, HOVER_DELAY_MS);
       }}
       onPointerOut={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        document.body.style.cursor = '';
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
           hoverTimeoutRef.current = null;

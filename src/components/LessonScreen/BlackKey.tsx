@@ -1,5 +1,5 @@
 // components/LessonScreen/BlackKey.tsx
-import { useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { ThreeEvent } from '@react-three/fiber';
 import { createBlackKeyGeometry } from '@/utils/keyGeometry';
 import type { PitchClass } from '@/types';
@@ -28,6 +28,13 @@ export function BlackKey({
 
   const geometry = useMemo(() => createBlackKeyGeometry(), []);
 
+  // The keys are click targets, so the cursor shows the pointing hand while
+  // over one. Set directly (not via the delayed hover state) so it reacts
+  // instantly, and cleared on unmount in case the lesson ends mid-hover.
+  useEffect(() => () => {
+    document.body.style.cursor = '';
+  }, []);
+
   const color = isHighlighted
     ? HIGHLIGHTED_COLOR
     : isHovered
@@ -42,12 +49,14 @@ export function BlackKey({
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        document.body.style.cursor = 'pointer';
         hoverTimeoutRef.current = window.setTimeout(() => {
           setIsHovered(true);
         }, HOVER_DELAY_MS);
       }}
       onPointerOut={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        document.body.style.cursor = '';
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
           hoverTimeoutRef.current = null;
