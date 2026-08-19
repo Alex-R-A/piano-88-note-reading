@@ -10,6 +10,7 @@ interface WhiteKeyProps {
   position: [number, number, number];
   onClick: () => void;
   isHighlighted: boolean;
+  interactive: boolean;
 }
 
 // Colors. Key tops are warm off-white ivory rather than paper white.
@@ -26,6 +27,7 @@ export function WhiteKey({
   position,
   onClick,
   isHighlighted,
+  interactive,
 }: WhiteKeyProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -39,6 +41,20 @@ export function WhiteKey({
   useEffect(() => () => {
     document.body.style.cursor = '';
   }, []);
+
+  // Locking the keyboard releases any held or hovered key immediately, so
+  // the board is visually reset by the time the next question appears.
+  useEffect(() => {
+    if (!interactive) {
+      setIsPressed(false);
+      setIsHovered(false);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      document.body.style.cursor = '';
+    }
+  }, [interactive]);
 
   const hovered = isHovered && !isHighlighted;
   const color = isHighlighted
@@ -57,6 +73,7 @@ export function WhiteKey({
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        if (!interactive) return;
         document.body.style.cursor = 'pointer';
         hoverTimeoutRef.current = window.setTimeout(() => {
           setIsHovered(true);
@@ -74,6 +91,7 @@ export function WhiteKey({
       }}
       onPointerDown={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        if (!interactive) return;
         setIsPressed(true);
       }}
       onPointerUp={(e: ThreeEvent<PointerEvent>) => {
@@ -82,6 +100,7 @@ export function WhiteKey({
       }}
       onClick={(e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();
+        if (!interactive) return;
         onClick();
       }}
     >

@@ -15,6 +15,7 @@ interface BlackKeyProps {
   position: [number, number, number];
   onClick: () => void;
   isHighlighted: boolean;
+  interactive: boolean;
 }
 
 export function BlackKey({
@@ -22,6 +23,7 @@ export function BlackKey({
   position,
   onClick,
   isHighlighted,
+  interactive,
 }: BlackKeyProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -35,6 +37,20 @@ export function BlackKey({
   useEffect(() => () => {
     document.body.style.cursor = '';
   }, []);
+
+  // Locking the keyboard releases any held or hovered key immediately, so
+  // the board is visually reset by the time the next question appears.
+  useEffect(() => {
+    if (!interactive) {
+      setIsPressed(false);
+      setIsHovered(false);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      document.body.style.cursor = '';
+    }
+  }, [interactive]);
 
   const hovered = isHovered && !isHighlighted;
   const color = isHighlighted
@@ -52,6 +68,7 @@ export function BlackKey({
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        if (!interactive) return;
         document.body.style.cursor = 'pointer';
         hoverTimeoutRef.current = window.setTimeout(() => {
           setIsHovered(true);
@@ -69,6 +86,7 @@ export function BlackKey({
       }}
       onPointerDown={(e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
+        if (!interactive) return;
         setIsPressed(true);
       }}
       onPointerUp={(e: ThreeEvent<PointerEvent>) => {
@@ -77,6 +95,7 @@ export function BlackKey({
       }}
       onClick={(e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();
+        if (!interactive) return;
         onClick();
       }}
     >

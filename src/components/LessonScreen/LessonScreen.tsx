@@ -55,6 +55,19 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   const prevSelectionIdRef = useRef(noteSelectionId);
   const audioInitialized = useRef(false);
 
+  // The keyboard accepts presses only while a question is fully on screen:
+  // not during answer feedback, and not until the new note's 320ms fade-in
+  // has finished. Locking also resets any key still held down, so the board
+  // is visually fresh when the next question arrives.
+  const [noteSettled, setNoteSettled] = useState(false);
+  useEffect(() => {
+    setNoteSettled(false);
+    const timer = setTimeout(() => setNoteSettled(true), 350);
+    return () => clearTimeout(timer);
+  }, [noteSelectionId]);
+  const keysInteractive =
+    feedbackState === 'none' && currentNote !== null && noteSettled;
+
   // Suppress mic detection on each new note to avoid picking up the played
   // sample audio. The note's visual entrance is handled inside the staff
   // itself (useVexFlow fades the new note in); the staff lines and clef stay
@@ -143,6 +156,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
         <PianoKeyboard3D
           onKeyClick={onKeyClick}
           highlightedKey={highlightedKey}
+          interactive={keysInteractive}
         />
       </div>
 

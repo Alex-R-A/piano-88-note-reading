@@ -18,6 +18,8 @@ import type { PitchClass, NoteLetter } from '@/types';
 interface PianoKeyboard3DProps {
   onKeyClick: (pitchClass: PitchClass) => void;
   highlightedKey: PitchClass | null;
+  /** When false, keys ignore the pointer entirely (between questions). */
+  interactive: boolean;
 }
 
 const WHITE_KEYS: NoteLetter[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -36,6 +38,7 @@ function isKeyHighlighted(
 function KeyboardScene({
   onKeyClick,
   highlightedKey,
+  interactive,
 }: PianoKeyboard3DProps) {
   // Layout runs left to right from the left edge of C; shift so the octave
   // straddles the origin.
@@ -137,6 +140,7 @@ function KeyboardScene({
           position={position}
           onClick={() => onKeyClick(pitchClass)}
           isHighlighted={isKeyHighlighted(pitchClass, highlightedKey)}
+          interactive={interactive}
         />
       ))}
 
@@ -147,6 +151,7 @@ function KeyboardScene({
           position={position}
           onClick={() => onKeyClick(pitchClass)}
           isHighlighted={isKeyHighlighted(pitchClass, highlightedKey)}
+          interactive={interactive}
         />
       ))}
     </>
@@ -156,6 +161,7 @@ function KeyboardScene({
 export function PianoKeyboard3D({
   onKeyClick,
   highlightedKey,
+  interactive,
 }: PianoKeyboard3DProps) {
   return (
     // Sized by height with a locked 3:1 aspect, so the instrument scales to the
@@ -187,6 +193,7 @@ export function PianoKeyboard3D({
           <KeyboardScene
             onKeyClick={onKeyClick}
             highlightedKey={highlightedKey}
+            interactive={interactive}
           />
         </Canvas>
       </WebGLErrorBoundary>
