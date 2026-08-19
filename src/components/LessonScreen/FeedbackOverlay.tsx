@@ -35,7 +35,7 @@ function makeBoos(): Boo[] {
   return Array.from({ length: BOO_COUNT }, () => ({
     left: 8 + Math.random() * 84, // % across the page
     bottom: 12 + Math.random() * 18, // % up the page: around the keyboard base
-    size: 14 + Math.random() * 18,
+    size: 22 + Math.random() * 26,
     delay: Math.random() * 350,
     duration: 950 + Math.random() * 500,
     tilt: -14 + Math.random() * 28,
@@ -64,12 +64,12 @@ export function FeedbackOverlay({ feedbackState }: FeedbackOverlayProps) {
   const boos = useMemo(() => (wave > 0 ? makeBoos() : []), [wave]);
 
   return (
-    // zIndex 0 keeps the swarm behind the page content: the boos surface
-    // through the canvas's transparent pixels and hide behind the painted
-    // keys, so they genuinely appear to fly out from underneath the piano.
+    // The swarm flies in front of the page content: behind it, the staff and
+    // keyboard hid most of the boos and the effect read as stray glyphs. It
+    // is pointer-events-none, so nothing underneath is blocked.
     <div
       className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 40 }}
       data-testid="feedback-overlay"
       data-feedback={feedbackState}
       aria-hidden="true"

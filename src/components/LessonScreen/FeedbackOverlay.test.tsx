@@ -45,12 +45,12 @@ describe('FeedbackOverlay', () => {
     expect(screen.getAllByText('Boo!').length).toBe(firstWave);
   });
 
-  it('lets clicks pass through and stays behind content', () => {
+  it('lets clicks pass through while flying in front of content', () => {
     render(<FeedbackOverlay feedbackState="incorrect" />);
     const overlay = screen.getByTestId('feedback-overlay');
 
     expect(overlay).toHaveClass('pointer-events-none', 'fixed', 'inset-0');
-    expect(overlay).toHaveStyle({ zIndex: '0' });
+    expect(overlay).toHaveStyle({ zIndex: '40' });
     expect(overlay).toHaveAttribute('aria-hidden', 'true');
   });
 });
