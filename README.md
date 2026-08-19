@@ -74,11 +74,11 @@ whole instrument.
 
 ## Run it
 
-You need [Node.js](https://nodejs.org) 22 or newer and [pnpm](https://pnpm.io).
+You need [Node.js](https://nodejs.org) 22 or newer.
 
 ```
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 Open the address it prints (usually `http://localhost:5173`), pick your
