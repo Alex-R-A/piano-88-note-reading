@@ -1,4 +1,29 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+const TRANSPARENT = /rgba?\(0,\s*0,\s*0,?\s*0?\)/;
+
+/**
+ * Click the keyboard center until a feedback flash appears, then let the
+ * feedback cycle finish. The R3F canvas initializes asynchronously, so a
+ * click issued the moment the lesson screen appears can land before the 3D
+ * scene is interactive. Returns the flash color. Consumes one answer.
+ */
+async function answerAtCenter(page: Page): Promise<string> {
+  const overlay = page.getByTestId('feedback-overlay');
+  const canvas = page.locator('canvas');
+  const box = (await canvas.boundingBox())!;
+  let color = '';
+  await expect(async () => {
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(120);
+    color = await overlay.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(color).not.toMatch(TRANSPARENT);
+  }).toPass({ timeout: 15000 });
+  // Let flash + fade + advance complete so the next click lands on a fresh
+  // question.
+  await page.waitForTimeout(1400);
+  return color;
+}
 
 /**
  * Full lesson flow against the real UI.
@@ -114,17 +139,22 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       const canvas = page.locator('canvas');
       await expect(canvas).toBeVisible();
 
-      // The keyboard is responsive with a locked 3:1 aspect ratio.
-      const box = await canvas.boundingBox();
-      expect(box).not.toBeNull();
-      expect(box!.width / box!.height).toBeGreaterThan(2.9);
-      expect(box!.width / box!.height).toBeLessThan(3.1);
+      // The keyboard is responsive with a locked 3:1 aspect ratio. Poll:
+      // until styles land, a canvas reports its intrinsic 300x150 size.
+      await expect(async () => {
+        const box = await canvas.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.width / box!.height).toBeGreaterThan(2.9);
+        expect(box!.width / box!.height).toBeLessThan(3.1);
+      }).toPass({ timeout: 15000 });
     });
 
     test('shows the audio-unavailable notice when samples fail to load', async ({ page }) => {
       // Sample loading is blocked in beforeEach, so the spec's error-handling
-      // notice must appear.
-      await expect(page.getByTestId('audio-unavailable-notice')).toBeVisible();
+      // notice must appear once the aborted fetches settle.
+      await expect(page.getByTestId('audio-unavailable-notice')).toBeVisible({
+        timeout: 15000,
+      });
       await expect(page.getByText('Audio unavailable')).toBeVisible();
     });
 
@@ -135,28 +165,15 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       const initialBgColor = await overlay.evaluate((el) => {
         return window.getComputedStyle(el).backgroundColor;
       });
-      expect(initialBgColor).toMatch(/rgba?\(0,\s*0,\s*0,?\s*0?\)/);
-
-      const canvas = page.locator('canvas');
-      const canvasBox = await canvas.boundingBox();
-      expect(canvasBox).not.toBeNull();
+      expect(initialBgColor).toMatch(TRANSPARENT);
 
       // The camera looks at the keyboard's center, so the canvas center lands
       // on the F key.
-      await page.mouse.click(
-        canvasBox!.x + canvasBox!.width / 2,
-        canvasBox!.y + canvasBox!.height / 2
-      );
-
-      await page.waitForTimeout(100);
-
-      const afterClickBgColor = await overlay.evaluate((el) => {
-        return window.getComputedStyle(el).backgroundColor;
-      });
+      const flashColor = await answerAtCenter(page);
 
       // Green rgba(34, 197, 94, 0.3) or red rgba(239, 68, 68, 0.3)
-      const isGreen = afterClickBgColor.includes('34') && afterClickBgColor.includes('197');
-      const isRed = afterClickBgColor.includes('239') && afterClickBgColor.includes('68');
+      const isGreen = flashColor.includes('34') && flashColor.includes('197');
+      const isRed = flashColor.includes('239') && flashColor.includes('68');
       expect(isGreen || isRed).toBe(true);
     });
 
@@ -173,14 +190,15 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       await page.getByRole('button', { name: 'Start Lesson' }).click();
       await expect(page.getByRole('button', { name: 'Stop Lesson' })).toBeVisible();
 
+      // Wait for the keyboard to be interactive, answering one question, then
+      // answer a few more (waiting out the feedback animation each time).
+      await answerAtCenter(page);
       const canvas = page.locator('canvas');
       const canvasBox = await canvas.boundingBox();
       expect(canvasBox).not.toBeNull();
-
-      // Answer a few questions (waiting out the feedback animation)
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 2; i++) {
         await page.mouse.click(
-          canvasBox!.x + canvasBox!.width / 2 + (i - 1) * 50,
+          canvasBox!.x + canvasBox!.width / 2 + (i === 0 ? -50 : 50),
           canvasBox!.y + canvasBox!.height / 2
         );
         await page.waitForTimeout(1200);
@@ -238,13 +256,7 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       const canvas = page.locator('canvas');
       await expect(canvas).toBeVisible();
 
-      const canvasBox = await canvas.boundingBox();
-      expect(canvasBox).not.toBeNull();
-      await page.mouse.click(
-        canvasBox!.x + canvasBox!.width / 2,
-        canvasBox!.y + canvasBox!.height / 2
-      );
-      await page.waitForTimeout(1200);
+      await answerAtCenter(page);
 
       await page.getByRole('button', { name: 'Stop Lesson' }).click();
       await expect(page.getByText('Session Complete')).toBeVisible();

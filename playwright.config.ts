@@ -8,8 +8,15 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // One local retry: very rarely the R3F canvas comes up unresponsive to
+  // pointer events (page-scoped init race, worse in newer headless Chromium;
+  // app state was verified correct when it happens). A fresh page clears it.
+  retries: process.env.CI ? 2 : 1,
+  // Every lesson-screen test spins up a WebGL scene; with one headless
+  // browser per core they all software-render concurrently and the 3D
+  // canvas can starve for tens of seconds, failing tests that interact
+  // with the keyboard. Two workers keeps runs fast without the contention.
+  workers: process.env.CI ? 1 : 2,
   reporter: 'html',
   timeout: 60000,
 

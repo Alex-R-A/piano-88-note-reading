@@ -52,7 +52,12 @@ export async function initAudio(): Promise<void> {
       isLoaded = true;
       console.log('[Audio] Initialization complete, isLoaded:', isLoaded);
     } catch (error) {
-      // Reset state on failure so retry is possible
+      // Reset state on failure so retry is possible. Close the context first:
+      // retries create a fresh one, and browsers cap concurrent AudioContexts,
+      // so merely dropping the reference leaks a slot per failed attempt.
+      if (audioContext) {
+        audioContext.close().catch(() => {});
+      }
       audioContext = null;
       piano = null;
       loadPromise = null;

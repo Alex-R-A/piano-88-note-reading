@@ -79,9 +79,18 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
 
   // Attempt audio init and record the outcome so failures are visible
   // (spec error handling: "Audio was blocked" / "Audio unavailable").
-  // A non-ok outcome re-arms the flag so any later user gesture retries.
+  // A non-ok outcome re-arms the flag so a later user gesture retries, but
+  // no more than once every few seconds: sample loading opens a context and
+  // fires a burst of fetches, which must not happen on every key click while
+  // the network is down.
+  // -Infinity, not 0: performance.now() is ms since page load, so a 0
+  // sentinel would silently skip the first attempt for any lesson entered
+  // within 3s of loading the app.
+  const lastInitAttemptRef = useRef(-Infinity);
   const tryInitAudio = useCallback(() => {
     if (audioInitialized.current) return;
+    if (performance.now() - lastInitAttemptRef.current < 3000) return;
+    lastInitAttemptRef.current = performance.now();
     audioInitialized.current = true;
     initializeAudio().then((status) => {
       setAudioStatus(status);
