@@ -139,7 +139,7 @@ function KeyboardScene({
           the footprint, and follows keys as they sink when pressed. */}
       <ContactShadows
         position={[0, -0.01, 0]}
-        opacity={0.5}
+        opacity={0.38}
         scale={14}
         blur={2.4}
         far={2}
