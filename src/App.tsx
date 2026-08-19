@@ -1,5 +1,5 @@
 // App.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { MainScreen } from '@/components/MainScreen';
 import { LessonScreen } from '@/components/LessonScreen';
 import { AnalyticsScreen } from '@/components/AnalyticsScreen';
@@ -84,8 +84,10 @@ function App() {
 
   // Screens swap content within the same document, so the scroll position
   // carries over (e.g. scrolled down to reach Start Lesson, the lesson then
-  // opens mid-page). Every screen lays out from the top.
-  useEffect(() => {
+  // opens mid-page). Every screen lays out from the top. Layout effect, not
+  // effect: useEffect runs after paint, which lets the new screen flash one
+  // frame at the old scroll position before jumping.
+  useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [currentScreen]);
 
