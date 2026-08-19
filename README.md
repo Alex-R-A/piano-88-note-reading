@@ -42,10 +42,10 @@ the whole loop, and the loop is engineered to teach fast:
 
 ## What is different about this app
 
-- **A real staff, not a diagram.** Proper engraved notation with ledger
-  lines and with sharps and flats in both spellings, rendered the way sheet
-  music actually prints. You practice reading the thing you will actually
-  read.
+- **Real sheet music, not simplified graphics.** Notes render as proper
+  engraved notation with ledger lines and with sharps and flats in both
+  spellings, exactly the way printed music looks. You practice reading the
+  thing you will actually read.
 - **Both clefs, not just the easy one.** Piano music is written on two
   staves: treble clef for the right hand, bass clef for the left, and the
   same-looking line means a different note on each (the bottom line is E in
