@@ -35,16 +35,18 @@ export function BlackKey({
     document.body.style.cursor = '';
   }, []);
 
+  const hovered = isHovered && !isHighlighted;
   const color = isHighlighted
     ? HIGHLIGHTED_COLOR
-    : isHovered
+    : hovered
       ? BLACK_KEY_HOVER_COLOR
       : BLACK_KEY_COLOR;
 
   return (
     <mesh
       geometry={geometry}
-      position={position}
+      // Same half-press hover cue as the white keys.
+      position={hovered ? [position[0], position[1] - 0.06, position[2]] : position}
       castShadow
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {

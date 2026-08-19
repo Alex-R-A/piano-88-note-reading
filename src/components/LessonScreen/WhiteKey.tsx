@@ -14,7 +14,9 @@ interface WhiteKeyProps {
 
 // Colors. Key tops are warm off-white ivory rather than paper white.
 const WHITE_KEY_COLOR = '#f4f1e8';
-const WHITE_KEY_HOVER_COLOR = '#fffdf6';
+// A warm brass-cream, not a brighter white: a few-percent brightening is
+// invisible on many monitors, while a hue shift reads on all of them.
+const WHITE_KEY_HOVER_COLOR = '#eBdcb7';
 const HIGHLIGHTED_COLOR = '#3b82f6';
 const HOVER_DELAY_MS = 100;
 
@@ -37,16 +39,19 @@ export function WhiteKey({
     document.body.style.cursor = '';
   }, []);
 
+  const hovered = isHovered && !isHighlighted;
   const color = isHighlighted
     ? HIGHLIGHTED_COLOR
-    : isHovered
+    : hovered
       ? WHITE_KEY_HOVER_COLOR
       : WHITE_KEY_COLOR;
 
   return (
     <mesh
       geometry={geometry}
-      position={position}
+      // Hover sinks the key slightly, like a half-pressed key: a geometric
+      // cue that stays visible on monitors that crush the subtle tint.
+      position={hovered ? [position[0], position[1] - 0.06, position[2]] : position}
       castShadow
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
@@ -70,7 +75,9 @@ export function WhiteKey({
         onClick();
       }}
     >
-      {/* Polished key plastic: a diffuse ivory body under a thin gloss coat. */}
+      {/* Polished key plastic: a diffuse ivory body under a thin gloss coat.
+          The hover tint alone washes out on the strongly-lit top face, so a
+          faint brass emissive carries the hover cue on every face. */}
       <meshPhysicalMaterial
         color={color}
         roughness={0.45}
@@ -79,6 +86,8 @@ export function WhiteKey({
         clearcoatRoughness={0.22}
         sheen={0.2}
         sheenColor="#fff8e8"
+        emissive={hovered ? '#8a6d2b' : '#000000'}
+        emissiveIntensity={hovered ? 0.35 : 0}
       />
     </mesh>
   );
