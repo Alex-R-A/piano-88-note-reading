@@ -29,6 +29,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
   } = useLessonEngine();
 
   const noteSelectionId = useLessonStore((state) => state.noteSelectionId);
+  const fullNoteSet = useLessonStore((state) => state.fullNoteSet);
   const showStaffDisplay = useSettingsStore((state) => state.showStaffDisplay);
   const micEnabled = useSettingsStore((state) => state.micEnabled);
   const audioEnabled = useSettingsStore((state) => state.audioEnabled);
@@ -131,7 +132,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       {/* Staff Display - hidden for audio-only mode */}
       {showStaffDisplay && (
         <div className="mb-4">
-          <StaffDisplay noteId={currentNote} />
+          <StaffDisplay noteId={currentNote} noteSet={fullNoteSet} />
         </div>
       )}
 

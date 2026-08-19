@@ -1,21 +1,68 @@
 // hooks/useVexFlow.ts
 import { useEffect, useRef } from 'react';
 import { Renderer, Stave, StaveNote, Voice, Formatter, Accidental } from 'vexflow';
-import { parseNote } from '@/utils/noteUtils';
+import { parseNote, getClefForNote } from '@/utils/noteUtils';
 import type { NoteId, Clef } from '@/types';
 
-// The renderer is 500x660 CSS px at a 3x context scale, so VexFlow's own
-// coordinate window is this many user units. Notes are framed against it.
-const DEFAULT_VIEW_WIDTH = 500 / 3;
-const DEFAULT_VIEW_HEIGHT = 660 / 3;
+// The staff-plus-clef block always occupies the same drawing coordinates;
+// only ledger-line notes extend past it. Measured from real renders:
+// the block spans y 29.7..210.5 (either clef) and x 10..161; C8's ledger
+// stack reaches up to y=-70.5 (treble) and A0's down to y=285.6 (bass).
+// The two anchors below reproduce those extremes at 5 units per diatonic
+// step, which is how notes are spaced on a staff.
+const FRAME_PAD = 10;
+const BLOCK_TOP = 29.7;
+const BLOCK_BOTTOM = 210.5;
+const BLOCK_LEFT = 10;
+const BLOCK_RIGHT = 161;
+const UNITS_PER_STEP = 5;
+const TREBLE_TOP_ANCHOR = { d: 56, top: -70.5 }; // C8
+const BASS_BOTTOM_ANCHOR = { d: 5, bottom: 285.6 }; // A0
 
-/** Aspect ratio of the default view, for sizing the container. */
-export const STAFF_ASPECT_RATIO = DEFAULT_VIEW_WIDTH / DEFAULT_VIEW_HEIGHT;
+const LETTER_STEP: Record<string, number> = {
+  C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6,
+};
+
+export interface StaffFrame {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * A fixed drawing window for a whole lesson, sized so that every note in the
+ * set fits. Framing per lesson instead of per note keeps the five staff
+ * lines anchored on screen; the notes move around them, not the staff
+ * around the notes. Falls back to the staff-plus-clef block for an empty
+ * set. Accidentals do not affect it: sharp and flat sit on the letter's
+ * line.
+ */
+export function computeStaffFrame(noteSet: NoteId[]): StaffFrame {
+  let top = BLOCK_TOP;
+  let bottom = BLOCK_BOTTOM;
+  for (const noteId of noteSet) {
+    const note = parseNote(noteId);
+    const d = LETTER_STEP[note.letter] + note.octave * 7;
+    if (getClefForNote(noteId) === 'treble') {
+      top = Math.min(top, TREBLE_TOP_ANCHOR.top + (TREBLE_TOP_ANCHOR.d - d) * UNITS_PER_STEP);
+    } else {
+      bottom = Math.max(bottom, BASS_BOTTOM_ANCHOR.bottom - (d - BASS_BOTTOM_ANCHOR.d) * UNITS_PER_STEP);
+    }
+  }
+  return {
+    x: BLOCK_LEFT - FRAME_PAD,
+    y: top - FRAME_PAD,
+    width: BLOCK_RIGHT - BLOCK_LEFT + FRAME_PAD * 2,
+    height: bottom - top + FRAME_PAD * 2,
+  };
+}
 
 interface UseVexFlowOptions {
   noteId: NoteId | null;
   clef: Clef;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  frame: StaffFrame;
 }
 
 /**
@@ -23,7 +70,7 @@ interface UseVexFlowOptions {
  * Renders a musical staff with clef at 50% opacity and note at 100% opacity.
  * Handles accidentals and leger lines automatically.
  */
-export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
+export function useVexFlow({ noteId, clef, containerRef, frame }: UseVexFlowOptions) {
   const rendererRef = useRef<InstanceType<typeof Renderer> | null>(null);
 
   useEffect(() => {
@@ -91,39 +138,19 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
     // the answer-feedback wash).
     const noteGroup = containerRef.current.querySelector('.vf-stavenote');
     if (noteGroup) {
-      (noteGroup as SVGElement).style.animation = 'note-fade-in 160ms ease-out both';
+      (noteGroup as SVGElement).style.animation = 'note-fade-in 320ms ease-out both';
     }
 
-    // Frame the drawing.
+    // Frame the drawing with the lesson-wide fixed window. Refitting the
+    // viewBox per note made the five staff lines jump up and down as
+    // ledger-line notes stretched the drawn extent; with one frame per
+    // lesson the staff is anchored and only the notes move.
     //
-    // VexFlow sizes the SVG to a fixed window (166.67 x 220 user units after
-    // the 3x scale). Notes needing many leger lines draw outside it and are
-    // clipped by the SVG viewport: C8's notehead sits ~70 units above the top
-    // edge and is cut in half. Fit the viewBox to what was actually drawn, but
-    // never below the default window, so ordinary notes keep exactly the size
-    // and position they had and only the extremes zoom out to fit.
-    //
-    // Making the element fluid at the same time lets the staff scale with its
-    // container instead of pinning the lesson screen to 660px of height.
+    // Making the element fluid at the same time lets the staff scale with
+    // its container instead of pinning the lesson screen to 660px of height.
     const svg = containerRef.current.querySelector('svg');
     if (svg) {
-      const bounds = svg.getBBox();
-      const pad = 6;
-      let x = bounds.x - pad;
-      let y = bounds.y - pad;
-      let width = bounds.width + pad * 2;
-      let height = bounds.height + pad * 2;
-
-      if (width < DEFAULT_VIEW_WIDTH) {
-        x -= (DEFAULT_VIEW_WIDTH - width) / 2;
-        width = DEFAULT_VIEW_WIDTH;
-      }
-      if (height < DEFAULT_VIEW_HEIGHT) {
-        y -= (DEFAULT_VIEW_HEIGHT - height) / 2;
-        height = DEFAULT_VIEW_HEIGHT;
-      }
-
-      svg.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
+      svg.setAttribute('viewBox', `${frame.x} ${frame.y} ${frame.width} ${frame.height}`);
       svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       svg.setAttribute('width', '100%');
       svg.setAttribute('height', '100%');
@@ -140,5 +167,5 @@ export function useVexFlow({ noteId, clef, containerRef }: UseVexFlowOptions) {
         containerRef.current.innerHTML = '';
       }
     };
-  }, [noteId, clef, containerRef]);
+  }, [noteId, clef, containerRef, frame]);
 }
