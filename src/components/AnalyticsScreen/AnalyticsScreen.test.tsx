@@ -10,9 +10,9 @@ import type { NoteStats } from '@/types';
 
 describe('AccuracyHeader', () => {
   describe('accuracy calculation display', () => {
-    it('should display "Session Complete" title', () => {
+    it('should display "Lesson Complete" title', () => {
       render(<AccuracyHeader overallAccuracy={75} />);
-      expect(screen.getByText('Session Complete')).toBeInTheDocument();
+      expect(screen.getByText('Lesson Complete')).toBeInTheDocument();
     });
 
     it('should display overall accuracy percentage', () => {
@@ -290,7 +290,7 @@ describe('AnalyticsScreen', () => {
   it('should display header with overall accuracy', () => {
     render(<AnalyticsScreen onBackToMain={() => {}} />);
 
-    expect(screen.getByText('Session Complete')).toBeInTheDocument();
+    expect(screen.getByText('Lesson Complete')).toBeInTheDocument();
     // Total: 23 shown, 14 correct = 60.87% -> 61%
     expect(screen.getByTestId('overall-accuracy')).toHaveTextContent('61%');
   });

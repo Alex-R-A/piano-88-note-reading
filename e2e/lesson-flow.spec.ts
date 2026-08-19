@@ -180,7 +180,7 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
     test('stop button navigates to analytics screen', async ({ page }) => {
       await page.getByRole('button', { name: 'Stop Lesson' }).click();
 
-      await expect(page.getByText('Session Complete')).toBeVisible();
+      await expect(page.getByText('Lesson Complete')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Stop Lesson' })).not.toBeVisible();
     });
   });
@@ -205,7 +205,7 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       }
 
       await page.getByRole('button', { name: 'Stop Lesson' }).click();
-      await expect(page.getByText('Session Complete')).toBeVisible();
+      await expect(page.getByText('Lesson Complete')).toBeVisible();
     });
 
     test('analytics shows session stats table with accuracy bars', async ({ page }) => {
@@ -238,7 +238,7 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
 
       await expect(page.getByRole('heading', { name: 'Piano 88' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Start Lesson' })).toBeVisible();
-      await expect(page.getByText('Session Complete')).not.toBeVisible();
+      await expect(page.getByText('Lesson Complete')).not.toBeVisible();
     });
   });
 
@@ -259,7 +259,7 @@ test.describe('Piano 88 - Full Lesson Flow', () => {
       await answerAtCenter(page);
 
       await page.getByRole('button', { name: 'Stop Lesson' }).click();
-      await expect(page.getByText('Session Complete')).toBeVisible();
+      await expect(page.getByText('Lesson Complete')).toBeVisible();
       await expect(page.getByTestId('stats-table')).toBeVisible();
 
       await page.getByRole('button', { name: 'Back to Main Menu' }).click();

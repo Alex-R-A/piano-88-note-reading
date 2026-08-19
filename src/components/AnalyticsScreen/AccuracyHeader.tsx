@@ -5,7 +5,7 @@ interface AccuracyHeaderProps {
 }
 
 /**
- * Displays "Session Complete!" title and overall accuracy percentage.
+ * Displays "Lesson Complete!" title and overall accuracy percentage.
  * Per spec lines 339-342: accuracy in large font (48px+), rounded to nearest integer.
  */
 export function AccuracyHeader({ overallAccuracy }: AccuracyHeaderProps) {
@@ -20,7 +20,7 @@ export function AccuracyHeader({ overallAccuracy }: AccuracyHeaderProps) {
 
   return (
     <div className="text-center mb-10">
-      <h1 className="font-display text-6xl font-semibold text-ink-900 leading-none">Session Complete</h1>
+      <h1 className="font-display text-6xl font-semibold text-ink-900 leading-none">Lesson Complete</h1>
       <div className="rule-brass mx-auto mt-4 w-56" />
       <p className="mt-4 mb-8 text-sm uppercase tracking-[0.25em] text-ink-500">Here's how you did</p>
       <div className="bg-ivory-50 rounded-2xl shadow-lift ring-1 ring-ink-200 px-14 py-8 inline-block">
