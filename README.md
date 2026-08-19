@@ -10,6 +10,10 @@ Knowing. Every fluent player has this reflex, and nobody is born with it.
 Piano 88 exists to install that reflex, and every screen, sound, and setting
 in it is aimed at building it faster.
 
+![A lesson in progress: a note on the staff, a 3D piano keyboard below](screenshots/lesson-screen.jpg)
+
+![The start screen: choose octaves, toggle sound, staff, and microphone](screenshots/main-screen.jpg)
+
 ## Why drilling works when studying doesn't
 
 You can read a book about notation in an afternoon and still freeze at sheet
