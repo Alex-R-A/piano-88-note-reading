@@ -22,7 +22,7 @@ export function AccuracyHeader({ overallAccuracy }: AccuracyHeaderProps) {
     <div className="text-center mb-10">
       <h1 className="font-display text-6xl font-semibold text-ink-900 leading-none">Lesson Complete</h1>
       <div className="rule-brass mx-auto mt-4 w-56" />
-      <p className="mt-4 mb-8 text-sm uppercase tracking-[0.25em] text-ink-500">Here's how you did</p>
+      <p className="mt-4 mb-8 text-sm uppercase tracking-[0.25em] text-ink-500">A summary of your practice</p>
       <div className="bg-ivory-50 rounded-2xl shadow-lift ring-1 ring-ink-200 px-14 py-8 inline-block">
         <div className="text-[11px] font-medium text-ink-400 uppercase tracking-[0.25em] mb-3">Overall Accuracy</div>
         <div
