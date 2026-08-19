@@ -61,9 +61,14 @@ the whole loop, and the loop is engineered to teach fast:
 - **A real keyboard, not lettered buttons.** You answer on a 3D piano with
   correct key geometry. You are not learning that a note is called E, you are
   learning where E lives under your hand.
-- **It can listen to your piano.** Turn on the microphone and answer by
-  playing your real instrument instead of clicking. The app detects the note
-  you played. Reading and playing become one motion from day one.
+- **It can listen to your real piano.** Turn on the microphone and answer by
+  playing your actual instrument instead of clicking: the app hears which
+  note you played and judges it like any other answer. This is the
+  graduation path. Clicking a virtual keyboard teaches your eyes where the
+  keys are; playing the real one teaches your hands, the distances, the
+  touch, the feel of finding a key without looking. With the microphone on,
+  every reading drill doubles as fingers-on-keys practice, and reading and
+  playing become one motion from day one.
 - **You choose how deep the water is.** Start with the middle octave only,
   the seven notes around middle C. Add octaves as you grow, up to all 88
   keys, bass clef included. Sharps and flats are opt-in.
