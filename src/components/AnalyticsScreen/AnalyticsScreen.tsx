@@ -27,7 +27,7 @@ export function AnalyticsScreen({ onBackToMain }: AnalyticsScreenProps) {
       <div className="mt-10">
         <Button
           onClick={onBackToMain}
-          variant="secondary"
+          variant="primary"
           className="px-10 text-sm uppercase tracking-[0.18em]"
         >
           Back to Main Menu

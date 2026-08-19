@@ -16,19 +16,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       'focus-visible:ring-offset-ivory';
 
     const variantStyles: Record<ButtonVariant, string> = {
-      // Ebony body with a brass hairline: the instrument's own materials.
+      // A black key seen from above: polished ebony lit from the top edge,
+      // and pressing it sinks it like a key under a finger.
       primary:
-        'bg-ink-900 text-ivory-50 shadow-card ring-1 ring-inset ring-brass-700/40 ' +
-        'hover:bg-ink-800 hover:shadow-lift hover:ring-brass-500/60 ' +
-        'active:translate-y-px active:shadow-card ' +
-        'disabled:bg-ink-200 disabled:text-ink-400 disabled:ring-transparent ' +
-        'disabled:shadow-none disabled:cursor-not-allowed disabled:hover:bg-ink-200',
+        'text-ivory-50 bg-gradient-to-b from-ink-600 via-ink-800 to-ink-900 ' +
+        '[box-shadow:inset_0_1px_0_rgba(255,255,255,0.22),0_1px_2px_rgba(58,52,48,0.25),0_10px_22px_-10px_rgba(21,19,18,0.55)] ' +
+        'hover:from-ink-500 hover:via-ink-700 hover:to-ink-900 ' +
+        'active:translate-y-[2px] active:[box-shadow:inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(58,52,48,0.25)] ' +
+        'disabled:bg-none disabled:bg-ink-200 disabled:text-ink-400 ' +
+        'disabled:[box-shadow:none] disabled:cursor-not-allowed disabled:active:translate-y-0',
+      // Ghost: text and a hairline border on the bare page, present without
+      // asking for attention.
       secondary:
-        'bg-ivory-50 text-ink-700 ring-1 ring-inset ring-ink-200 shadow-card ' +
-        'hover:text-ink-900 hover:ring-brass-400 hover:shadow-lift ' +
-        'active:translate-y-px active:shadow-card ' +
-        'disabled:text-ink-300 disabled:ring-ink-100 disabled:shadow-none ' +
-        'disabled:cursor-not-allowed',
+        'bg-transparent text-ink-600 ring-1 ring-inset ring-ink-300 ' +
+        'hover:text-ink-900 hover:ring-ink-500 hover:bg-ink-900/[0.03] ' +
+        'active:translate-y-px ' +
+        'disabled:text-ink-300 disabled:ring-ink-100 disabled:cursor-not-allowed',
     };
 
     return (

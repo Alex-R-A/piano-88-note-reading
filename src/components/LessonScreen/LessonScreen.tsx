@@ -198,7 +198,7 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       <Button
         variant="secondary"
         onClick={handleStopLesson}
-        className="px-8 text-sm uppercase tracking-[0.18em] hover:bg-felt-700 hover:text-ivory-50 hover:ring-felt-700"
+        className="px-8 text-sm uppercase tracking-[0.18em]"
       >
         Stop Lesson
       </Button>
