@@ -1,6 +1,6 @@
 # Piano 88
 
-**Learn to read music the way you learn faces: by seeing them until you just know.**
+**Learn to read music the way you learn people: face and voice together, until you just know.**
 
 You want to play the piano. Between you and every song ever written stands one
 unglamorous skill: looking at a dot on five lines and knowing, instantly,
@@ -26,9 +26,15 @@ the whole loop, and the loop is engineered to teach fast:
 - **It never lets you coast.** The same key never comes up twice in a row,
   and recently shown notes are held back, so you are always recalling, never
   echoing what you just did.
-- **You hear everything.** Every note sounds as a real grand piano when it
-  appears and when you answer. Miss, and you hear the note you actually
-  pressed, so your ear learns alongside your eyes.
+- **Your ear trains alongside your eyes.** This is not a silent flashcard
+  deck. When a note appears it also sounds, as a sampled grand piano, so
+  every written symbol arrives welded to its pitch. And when you miss, the
+  app plays the note you actually pressed at the same octave as the target:
+  you hear exactly how far off you were and in which direction, a little too
+  low, a little too high. That comparison, target against your answer, is ear
+  training smuggled into every mistake. Over time the dot on the staff stops
+  being only a place on the keyboard and becomes a sound you can anticipate
+  before your finger lands.
 - **Mistakes cost seconds, not morale.** A right answer moves on briskly. A
   wrong one gets you booed by the concert hall (gently) and the lesson moves
   on. No streaks to lose, no scores to defend.
