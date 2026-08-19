@@ -24,6 +24,7 @@ export function BlackKey({
   isHighlighted,
 }: BlackKeyProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   const hoverTimeoutRef = useRef<number | null>(null);
 
   const geometry = useMemo(() => createBlackKeyGeometry(), []);
@@ -45,8 +46,8 @@ export function BlackKey({
   return (
     <mesh
       geometry={geometry}
-      // Same half-press hover cue as the white keys.
-      position={hovered ? [position[0], position[1] - 0.06, position[2]] : position}
+      // The key sinks only while actually held down, same as the white keys.
+      position={isPressed ? [position[0], position[1] - 0.06, position[2]] : position}
       castShadow
       receiveShadow
       onPointerOver={(e: ThreeEvent<PointerEvent>) => {
@@ -64,6 +65,15 @@ export function BlackKey({
           hoverTimeoutRef.current = null;
         }
         setIsHovered(false);
+        setIsPressed(false);
+      }}
+      onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        setIsPressed(true);
+      }}
+      onPointerUp={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        setIsPressed(false);
       }}
       onClick={(e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();
