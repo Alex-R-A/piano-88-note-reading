@@ -75,7 +75,7 @@ export function MainScreen({ onStartLesson, webGLDisabled = false }: MainScreenP
 
       {/* Piano visualization with octave selection */}
       <div className="mb-10">
-        <p className="text-xs uppercase tracking-[0.2em] text-ink-500 text-center mb-4">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-ink-500 text-center mb-4">
           Select octaves to practice
         </p>
         <PianoOverview selectedOctaves={selectedOctaves} onToggleOctave={toggleOctave} />
