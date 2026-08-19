@@ -128,26 +128,28 @@ export function LessonScreen({ onEndLesson }: LessonScreenProps) {
       className="surface-paper min-h-screen flex flex-col items-center py-8 px-4 relative"
       onClick={audioStatus !== 'ok' ? tryInitAudio : undefined}
     >
-      {/* Note transition overlay - white flash that fades out */}
-      {showTransition && (
-        <div
-          key={noteSelectionId}
-          // Matches the page ground: a pure white flash reads as a strobe
-          // against the paper background rather than a page turn.
-          className="fixed inset-0 bg-ivory pointer-events-none z-50"
-          style={{
-            animation: 'fadeOut 400ms ease-out forwards',
-          }}
-        />
-      )}
-
       {/* Feedback Overlay - renders behind content via z-index */}
       <FeedbackOverlay feedbackState={feedbackState} />
 
       {/* Staff Display - hidden for audio-only mode */}
       {showStaffDisplay && (
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <StaffDisplay noteId={currentNote} />
+          {/* Note transition - a brief fade over the staff only. This used
+              to cover the whole viewport, which strobed the entire page
+              (keyboard included) on every answer and was hard on the eyes
+              over a long session. Only the notation changes, so only it
+              turns the page. bg-ivory matches the paper ground, so it reads
+              as the staff blanking rather than a white flash. */}
+          {showTransition && (
+            <div
+              key={noteSelectionId}
+              className="absolute inset-0 bg-ivory pointer-events-none z-10"
+              style={{
+                animation: 'fadeOut 400ms ease-out forwards',
+              }}
+            />
+          )}
         </div>
       )}
 
