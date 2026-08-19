@@ -7,7 +7,8 @@ unglamorous skill: looking at a dot on five lines and knowing, instantly,
 which key it means. Not working it out. Not counting lines up from middle C.
 Knowing. Every fluent player has this reflex, and nobody is born with it.
 
-Piano 88 trains exactly that reflex and nothing else.
+Piano 88 exists to install that reflex, and every screen, sound, and setting
+in it is aimed at building it faster.
 
 ## Why drilling works when studying doesn't
 
